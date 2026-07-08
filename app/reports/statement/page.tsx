@@ -37,6 +37,15 @@ function daysBetween(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / MS_DAY);
 }
 
+// Local calendar date as YYYY-MM-DD, without going through toISOString() (which
+// shifts the date across timezone boundaries, e.g. IST midnight -> previous day UTC).
+function localDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function ageingBucket(daysOverdue: number): "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus" {
   if (daysOverdue <= 0) return "current";
   if (daysOverdue <= 30) return "d1_30";
@@ -76,7 +85,7 @@ export default function CustomerStatementPage() {
   }
   useEffect(() => {
     if (!note) return;
-    const t = setTimeout(() => setNote(null), 3000);
+    const t = setTimeout(() => setNote(null), 5000);
     return () => clearTimeout(t);
   }, [note]);
 
@@ -161,7 +170,7 @@ export default function CustomerStatementPage() {
     return map;
   }, [allocations]);
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => localDateStr(new Date()), []);
 
   // Per-invoice outstanding, ageing, overdue metrics — derived from real invoices + receipt_allocations.
   const invoiceMetrics = useMemo(() => {
@@ -295,16 +304,16 @@ export default function CustomerStatementPage() {
   const periodRange = useMemo(() => {
     const now = new Date();
     if (period === "this_month") {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+      const start = localDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
       return { from: start, to: today };
     }
     if (period === "last_30") {
-      const start = new Date(now.getTime() - 30 * MS_DAY).toISOString().slice(0, 10);
+      const start = localDateStr(new Date(now.getTime() - 30 * MS_DAY));
       return { from: start, to: today };
     }
     if (period === "fy") {
       const fyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
-      const start = new Date(fyStartYear, 3, 1).toISOString().slice(0, 10);
+      const start = localDateStr(new Date(fyStartYear, 3, 1));
       return { from: start, to: today };
     }
     if (period === "custom" && customFrom && customTo) {
@@ -384,26 +393,30 @@ export default function CustomerStatementPage() {
         </div>
         <div className="flex flex-none flex-wrap items-center gap-2">
           <button
-            onClick={() => toast("Excel export isn't wired up yet.")}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            onClick={() => toast("Excel export isn't built yet — this button is a placeholder for that screen.")}
+            className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
+            title="Not built yet"
           >
             Download Excel
           </button>
           <button
-            onClick={() => toast("Emailing statements isn't wired up yet.")}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            onClick={() => toast("Emailing statements isn't built yet — this button is a placeholder for that screen.")}
+            className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
+            title="Not built yet"
           >
             Email Statement
           </button>
           <button
-            onClick={() => toast("Use the Auto Email Shoot screen to send a reminder for overdue invoices.")}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            onClick={() => toast("Reminders are sent from the Auto Email Shoot screen, not from here.")}
+            className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
+            title="Not built yet"
           >
             Send Reminder
           </button>
           <button
             onClick={() => (customer ? window.print() : toast("Select a customer first."))}
             className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-dark"
+            title="Opens your browser's print dialog — choose 'Save as PDF' to export"
           >
             Print Statement
           </button>
@@ -411,7 +424,8 @@ export default function CustomerStatementPage() {
       </div>
 
       {note && (
-        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 print:hidden">
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 print:hidden">
+          <span>ℹ️</span>
           {note}
         </div>
       )}
