@@ -1,12 +1,14 @@
 import { PageHeader } from "@/components/PageHeader";
+import { ImportWizard } from "@/components/import/ImportWizard";
 
-export default function UploadPage() {
+export default function UploadReportPage() {
   return (
     <>
-      <PageHeader title="Upload Report" subtitle="Bulk import screen for CSV data." />
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-600">This screen is ready for CSV upload and preview.</p>
-      </div>
+      <PageHeader
+        title="Upload Report"
+        subtitle="Bulk-import customers or invoices from a CSV file — mapped, validated, and reviewed before anything is written."
+      />
+      <ImportWizard />
     </>
   );
 }
