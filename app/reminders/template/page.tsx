@@ -254,6 +254,12 @@ export default function ReminderTemplatePage() {
     return rows;
   }, [enriched, stageFilter, search, sortBy, editLog]);
 
+  useEffect(() => {
+    if (visible.length === 0) return;
+    if (!visible.some((t) => t.id === selectedId)) setSelectedId(visible[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
   const stagesActive = useMemo(() => new Set(enriched.map((t) => t.stage)).size, [enriched]);
 
   const cadenceRange = useMemo(() => {
