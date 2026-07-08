@@ -367,6 +367,49 @@ export default function CustomerStatementPage() {
     };
   }, [fullLedger, periodRange, txnFilter, customer, today]);
 
+  function exportCsv() {
+    if (!customer) return;
+
+    const csvEscape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const lines: string[] = [];
+
+    lines.push(csvEscape(`Customer Statement — ${customer.name} (${customer.code})`));
+    lines.push(csvEscape(`Period: ${PERIOD_LABELS[period]} (${statementFrom ? formatDate(statementFrom) : "—"} to ${formatDate(statementTo)})`));
+    lines.push("");
+    lines.push(["Date", "Particulars", "Ref", "Debit", "Credit", "Balance"].map(csvEscape).join(","));
+
+    displayRows.forEach((r) => {
+      lines.push(
+        [
+          r.date ? formatDate(r.date) : "",
+          r.note ? `${r.particulars} (${r.note})` : r.particulars,
+          r.ref,
+          r.debit ? r.debit.toFixed(2) : "",
+          r.credit ? r.credit.toFixed(2) : "",
+          r.balance.toFixed(2),
+        ]
+          .map(csvEscape)
+          .join(",")
+      );
+    });
+
+    lines.push(
+      ["", "Totals for period", "", totalDebit.toFixed(2), totalCredit.toFixed(2), closingBalance.toFixed(2)]
+        .map(csvEscape)
+        .join(",")
+    );
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${customer.code}-statement-${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   if (!isConfigured) {
     return (
       <>
@@ -393,9 +436,9 @@ export default function CustomerStatementPage() {
         </div>
         <div className="flex flex-none flex-wrap items-center gap-2">
           <button
-            onClick={() => toast("Excel export isn't built yet — this button is a placeholder for that screen.")}
-            className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
-            title="Not built yet"
+            onClick={() => (customer ? exportCsv() : toast("Select a customer first."))}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            title="Downloads a CSV file — opens directly in Excel or Google Sheets"
           >
             Download Excel
           </button>
