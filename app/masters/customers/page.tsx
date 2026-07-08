@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
-import type { Customer } from "@/lib/types";
+import type { Customer, Invoice } from "@/lib/types";
 import { PageHeader } from "@/components/PageHeader";
 import { NotConfigured } from "@/components/NotConfigured";
 import { DataTable, type Column } from "@/components/DataTable";
@@ -30,9 +30,12 @@ const EMPTY_FORM: FormState = {
 
 export default function CustomerMasterPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +50,19 @@ export default function CustomerMasterPage() {
     if (error) setError(error.message);
     else setCustomers(data as Customer[]);
     setLoading(false);
+  }
+
+  async function loadCustomerInvoices(customerId: string) {
+    if (!supabase) return;
+    setLoadingInvoices(true);
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .eq("customer_id", customerId)
+      .order("invoice_date", { ascending: false });
+    if (error) setError(error.message);
+    else setInvoices(data as Invoice[]);
+    setLoadingInvoices(false);
   }
 
   useEffect(() => {
@@ -71,6 +87,11 @@ export default function CustomerMasterPage() {
       credit_days: String(c.credit_days ?? 30),
     });
     setShowForm(true);
+  }
+
+  function selectCustomer(c: Customer) {
+    setSelectedCustomerId(c.id);
+    loadCustomerInvoices(c.id);
   }
 
   async function handleSave() {
@@ -125,12 +146,20 @@ export default function CustomerMasterPage() {
       key: "actions",
       header: "",
       render: (c) => (
-        <button
-          onClick={() => openEdit(c)}
-          className="text-sm font-medium text-brand hover:underline"
-        >
-          Edit
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => selectCustomer(c)}
+            className="text-sm font-medium text-brand hover:underline"
+          >
+            View Sales
+          </button>
+          <button
+            onClick={() => openEdit(c)}
+            className="text-sm font-medium text-brand hover:underline"
+          >
+            Edit
+          </button>
+        </div>
       ),
     },
   ];
@@ -162,7 +191,38 @@ export default function CustomerMasterPage() {
       {loading ? (
         <p className="text-sm text-slate-400">Loading customers…</p>
       ) : (
-        <DataTable columns={columns} rows={customers} empty="No customers yet. Add one to get started." />
+        <>
+          <DataTable columns={columns} rows={customers} empty="No customers yet. Add one to get started." />
+
+          {selectedCustomerId && (
+            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Sales Invoices</h3>
+                  <p className="text-sm text-slate-500">Invoices linked to the selected customer.</p>
+                </div>
+              </div>
+
+              {loadingInvoices ? (
+                <p className="text-sm text-slate-400">Loading invoices…</p>
+              ) : invoices.length === 0 ? (
+                <p className="text-sm text-slate-500">No invoices found for this customer.</p>
+              ) : (
+                <DataTable
+                  columns={[
+                    { key: "invoice_no", header: "Invoice No" },
+                    { key: "invoice_date", header: "Date" },
+                    { key: "due_date", header: "Due Date" },
+                    { key: "total", header: "Total", render: (row) => `₹${Number(row.total).toLocaleString("en-IN")}` },
+                    { key: "status", header: "Status" },
+                  ]}
+                  rows={invoices}
+                  empty="No invoices for this customer."
+                />
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {showForm && (
