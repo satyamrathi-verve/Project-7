@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase, isConfigured } from "@/lib/supabase";
 import type { Customer, Invoice, Receipt, ReceiptAllocation, ReminderLog } from "@/lib/types";
 import { NotConfigured } from "@/components/NotConfigured";
@@ -63,9 +64,10 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
 };
 
 export default function CustomerStatementPage() {
+  const searchParams = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<string>(searchParams.get("customer") ?? "");
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [receipts, setReceipts] = useState<Receipt[]>([]);
