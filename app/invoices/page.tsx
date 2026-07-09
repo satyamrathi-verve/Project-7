@@ -501,13 +501,22 @@ export default function InvoiceListPage() {
                                 <span className={`h-1.5 w-1.5 flex-none rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />
                                 {status}
                               </span>
-                              <Link
-                                href={`/invoices/${inv.id}/print`}
-                                aria-label={`Print ${inv.invoice_no}`}
-                                className={`text-ink-muted transition-colors duration-150 hover:text-brand ${FOCUS_RING} rounded`}
-                              >
-                                <PrintIcon />
-                              </Link>
+                              <span className="flex items-center gap-2">
+                                <Link
+                                  href={`/invoices/${inv.id}/edit`}
+                                  aria-label={`Edit ${inv.invoice_no}`}
+                                  className={`text-ink-muted transition-colors duration-150 hover:text-brand ${FOCUS_RING} rounded`}
+                                >
+                                  <EditIcon />
+                                </Link>
+                                <Link
+                                  href={`/invoices/${inv.id}/print`}
+                                  aria-label={`Print ${inv.invoice_no}`}
+                                  className={`text-ink-muted transition-colors duration-150 hover:text-brand ${FOCUS_RING} rounded`}
+                                >
+                                  <PrintIcon />
+                                </Link>
+                              </span>
                             </div>
                           </td>
                         </tr>
@@ -633,6 +642,14 @@ function PrintIcon() {
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
       <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2" strokeLinecap="round" strokeLinejoin="round" />
       <rect x="6" y="14" width="12" height="7" rx="1" />
+    </svg>
+  );
+}
+function EditIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M12 20h9" strokeLinecap="round" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
