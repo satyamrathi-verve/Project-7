@@ -131,25 +131,44 @@ Accounts Team`,
     setSending(true);
     setResult(null);
 
-    // CC has no column in reminder_log, so fold it into the recipient record honestly.
-    const recipient = cc.trim() ? `${to.trim()} (cc: ${cc.trim()})` : to.trim();
+    try {
+      const emailResponse = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: to.trim(),
+          cc: cc.trim() || undefined,
+          subject: subject.trim(),
+          body,
+        }),
+      });
 
-    const { error } = await supabase.from("reminder_log").insert({
-      invoice_id: invoice.id,
-      to_email: recipient,
-      subject: subject.trim(),
-      body,
-      status: "sent",
-    });
+      const emailResult = await emailResponse.json();
 
-    setSending(false);
-    if (error) {
-      setResult({ status: "failed", message: error.message });
+      const recipient = cc.trim() ? `${to.trim()} (cc: ${cc.trim()})` : to.trim();
+      const status = emailResponse.ok ? "sent" : "failed";
+
+      await supabase.from("reminder_log").insert({
+        invoice_id: invoice.id,
+        to_email: recipient,
+        subject: subject.trim(),
+        body,
+        status,
+      });
+
+      setSending(false);
+      if (!emailResponse.ok) {
+        setResult({ status: "failed", message: emailResult.error || "Email sending failed" });
+        onSent?.("failed");
+      } else {
+        setResult({ status: "sent", message: `Invoice emailed to ${to.trim() || "customer"}.` });
+        onSent?.("sent");
+        loadHistory();
+      }
+    } catch (err) {
+      setSending(false);
+      setResult({ status: "failed", message: err instanceof Error ? err.message : "Network error" });
       onSent?.("failed");
-    } else {
-      setResult({ status: "sent", message: `Invoice emailed to ${to.trim() || "customer"}.` });
-      onSent?.("sent");
-      loadHistory();
     }
   }
 

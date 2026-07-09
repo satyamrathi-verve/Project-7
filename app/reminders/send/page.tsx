@@ -183,25 +183,47 @@ export default function AutoEmailShootPage() {
 
     const toSend = emailPreviews.filter((p) => p.selected);
     const now = new Date().toISOString();
+    let successCount = 0;
 
-    const rows = toSend.map((p) => ({
-      invoice_id: p.invoice.id,
-      to_email: p.to_email,
-      subject: p.subject,
-      body: p.body,
-      status: "sent",
-      sent_at: now,
-    }));
+    for (const p of toSend) {
+      try {
+        const emailResponse = await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: p.to_email,
+            subject: p.subject,
+            body: p.body,
+          }),
+        });
 
-    const { error } = await supabase.from("reminder_log").insert(rows);
+        const status = emailResponse.ok ? "sent" : "failed";
+        if (emailResponse.ok) successCount++;
 
-    if (!error) {
-      setSentCount(toSend.length);
-      setShowSuccess(true);
-      await loadData();
-      setTimeout(() => setShowSuccess(false), 5000);
+        await supabase.from("reminder_log").insert({
+          invoice_id: p.invoice.id,
+          to_email: p.to_email,
+          subject: p.subject,
+          body: p.body,
+          status,
+          sent_at: now,
+        });
+      } catch {
+        await supabase.from("reminder_log").insert({
+          invoice_id: p.invoice.id,
+          to_email: p.to_email,
+          subject: p.subject,
+          body: p.body,
+          status: "failed",
+          sent_at: now,
+        });
+      }
     }
 
+    setSentCount(successCount);
+    setShowSuccess(true);
+    await loadData();
+    setTimeout(() => setShowSuccess(false), 5000);
     setSending(false);
   }
 
