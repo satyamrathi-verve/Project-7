@@ -8,11 +8,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Deep indigo — the single primary accent. Used sparingly by design.
+        // Verve Advisory brand blue
         brand: {
-          DEFAULT: "#3F51B5",
-          dark: "#32408F",
-          light: "#EEF0FA",
+          DEFAULT: "#3B5998",
+          dark: "#2d4373",
+          light: "#4a6aa8",
         },
         // Layered neutral surfaces — the "architectural" background system.
         canvas: "#F7F8FA",
