@@ -97,6 +97,13 @@ export default function CustomerStatementPage() {
   async function generatePdf() {
     if (!customer) return;
     setGeneratingPdf(true);
+
+    // PDF-safe money format (Rs. instead of ₹)
+    const pdfMoney = (n: number): string => {
+      const sign = n < 0 ? "-" : "";
+      return `${sign}Rs.${Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
     try {
       const { jsPDF } = await import("jspdf");
       const autoTable = (await import("jspdf-autotable")).default;
@@ -158,37 +165,37 @@ export default function CustomerStatementPage() {
       if (customer.gstin) { y += 4; doc.text(`GSTIN: ${customer.gstin}`, 15, y); }
 
       // Account Summary box
-      const summaryX = 115;
+      const summaryX = 105;
       const summaryY = y - 20;
+      const boxWidth = 90;
       doc.setFillColor(243, 244, 246);
-      doc.roundedRect(summaryX, summaryY - 5, 80, 40, 2, 2, "F");
+      doc.roundedRect(summaryX, summaryY - 5, boxWidth, 42, 2, 2, "F");
 
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
       doc.text("ACCOUNT SUMMARY", summaryX + 5, summaryY);
 
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setTextColor(60, 60, 60);
-      let sy = summaryY + 6;
+      let sy = summaryY + 7;
       doc.text("Opening Balance", summaryX + 5, sy);
-      doc.text(formatMoney(customer.opening_balance), summaryX + 75, sy, { align: "right" });
-      sy += 5;
+      doc.text(pdfMoney(customer.opening_balance), summaryX + boxWidth - 5, sy, { align: "right" });
+      sy += 6;
       doc.text("Total Invoiced", summaryX + 5, sy);
-      doc.text(formatMoney(totalInvoiced), summaryX + 75, sy, { align: "right" });
-      sy += 5;
+      doc.text(pdfMoney(totalInvoiced), summaryX + boxWidth - 5, sy, { align: "right" });
+      sy += 6;
       doc.text("Total Received", summaryX + 5, sy);
       doc.setTextColor(5, 150, 105);
-      doc.text(`(${formatMoney(totalReceived)})`, summaryX + 75, sy, { align: "right" });
-      sy += 2;
+      doc.text(`(${pdfMoney(totalReceived)})`, summaryX + boxWidth - 5, sy, { align: "right" });
+      sy += 3;
       doc.setDrawColor(180, 180, 180);
-      doc.line(summaryX + 5, sy, summaryX + 75, sy);
-      sy += 5;
+      doc.line(summaryX + 5, sy, summaryX + boxWidth - 5, sy);
+      sy += 6;
       doc.setTextColor(30, 58, 95);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.text("Balance Due", summaryX + 5, sy);
-      doc.setFontSize(12);
-      doc.text(formatMoney(outstandingBalance), summaryX + 75, sy, { align: "right" });
+      doc.text(pdfMoney(outstandingBalance), summaryX + boxWidth - 5, sy, { align: "right" });
 
       // Table
       y += 15;
@@ -196,27 +203,27 @@ export default function CustomerStatementPage() {
         r.date ? formatDate(r.date) : "—",
         r.particulars + (r.note ? ` (${r.note})` : ""),
         r.ref,
-        r.debit ? formatMoney(r.debit) : "—",
-        r.credit ? formatMoney(r.credit) : "—",
-        formatMoney(r.balance)
+        r.debit ? pdfMoney(r.debit) : "—",
+        r.credit ? pdfMoney(r.credit) : "—",
+        pdfMoney(r.balance)
       ]);
 
       autoTable(doc, {
         startY: y,
         head: [["Date", "Particulars", "Ref", "Debit", "Credit", "Balance"]],
         body: tableData,
-        foot: [["", "Totals for period", "", formatMoney(totalDebit), formatMoney(totalCredit), formatMoney(closingBalance)]],
-        styles: { fontSize: 8, cellPadding: 3 },
+        foot: [["", "Totals for period", "", pdfMoney(totalDebit), pdfMoney(totalCredit), pdfMoney(closingBalance)]],
+        styles: { fontSize: 7, cellPadding: 2 },
         headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: "bold" },
         footStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: "bold" },
         alternateRowStyles: { fillColor: [249, 250, 251] },
         columnStyles: {
-          0: { cellWidth: 22 },
-          1: { cellWidth: 50 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 28, halign: "right" },
-          4: { cellWidth: 28, halign: "right" },
-          5: { cellWidth: 28, halign: "right", fontStyle: "bold" },
+          0: { cellWidth: 20 },
+          1: { cellWidth: 45 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 30, halign: "right" },
+          4: { cellWidth: 30, halign: "right" },
+          5: { cellWidth: 30, halign: "right", fontStyle: "bold" },
         },
         margin: { left: 15, right: 15 },
       });
@@ -224,13 +231,13 @@ export default function CustomerStatementPage() {
       // Amount Due box
       const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
       doc.setFillColor(30, 58, 95);
-      doc.roundedRect(pageWidth - 70, finalY, 55, 20, 2, 2, "F");
+      doc.roundedRect(pageWidth - 75, finalY, 60, 20, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
-      doc.text("Total Amount Due", pageWidth - 42.5, finalY + 6, { align: "center" });
-      doc.setFontSize(14);
+      doc.text("Total Amount Due", pageWidth - 45, finalY + 6, { align: "center" });
+      doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text(formatMoney(closingBalance), pageWidth - 42.5, finalY + 14, { align: "center" });
+      doc.text(pdfMoney(closingBalance), pageWidth - 45, finalY + 14, { align: "center" });
 
       // Footer
       const footerY = finalY + 35;
