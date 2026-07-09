@@ -107,14 +107,38 @@ export function StepUpload({
           )}
 
           <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Detected headers</p>
-            <div className="flex flex-wrap gap-1.5">
-              {parsed.headers.map((h) => (
-                <span key={h} className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                  {h || <em className="text-slate-400">(blank)</em>}
-                </span>
-              ))}
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Preview — first {Math.min(50, parsed.rows.length).toLocaleString()} of {parsed.rowCount.toLocaleString()} rows
+            </p>
+            <div className="max-h-80 overflow-auto rounded-lg border border-slate-200">
+              <table className="w-full min-w-max text-xs">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-slate-100 text-left">
+                    <th className="whitespace-nowrap border-b border-slate-200 px-3 py-2 font-semibold text-slate-500">#</th>
+                    {parsed.headers.map((h) => (
+                      <th key={h} className="whitespace-nowrap border-b border-slate-200 px-3 py-2 font-semibold text-slate-600">
+                        {h || <em className="text-slate-400">(blank)</em>}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.rows.slice(0, 50).map((row, i) => (
+                    <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                      <td className="whitespace-nowrap px-3 py-1.5 text-slate-400">{i + 1}</td>
+                      {parsed.headers.map((h) => (
+                        <td key={h} className="max-w-[16rem] truncate whitespace-nowrap px-3 py-1.5 text-slate-700">
+                          {row[h] || <span className="text-slate-300">—</span>}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+            {parsed.rowCount > 50 && (
+              <p className="mt-1.5 text-xs text-slate-400">…and {(parsed.rowCount - 50).toLocaleString()} more rows, not shown here — they'll all be validated in Step 4.</p>
+            )}
           </div>
 
           {issues.length > 0 && (

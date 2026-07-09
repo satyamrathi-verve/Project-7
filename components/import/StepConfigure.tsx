@@ -1,6 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import type { EntityConfig, ImportConfig, ImportRow, ImportMode } from "@/lib/import/types";
+import { InfoTooltip } from "./InfoTooltip";
+
+const CURRENCIES = [
+  { code: "INR", label: "INR — Indian Rupee" },
+  { code: "USD", label: "USD — US Dollar" },
+  { code: "EUR", label: "EUR — Euro" },
+  { code: "GBP", label: "GBP — British Pound" },
+  { code: "AED", label: "AED — UAE Dirham" },
+  { code: "SGD", label: "SGD — Singapore Dollar" },
+  { code: "AUD", label: "AUD — Australian Dollar" },
+  { code: "CAD", label: "CAD — Canadian Dollar" },
+  { code: "JPY", label: "JPY — Japanese Yen" },
+];
+
+function reasonFor(row: ImportRow): string {
+  if (row.excluded) return "Manually excluded";
+  const err = row.issues.find((i) => i.level === "error");
+  return err ? err.message : "Won't be imported";
+}
 
 export function StepConfigure({
   entity,
@@ -19,19 +39,24 @@ export function StepConfigure({
   onBack: () => void;
   onNext: () => void;
 }) {
-  const eligible = rows.filter((r) => !r.excluded && r.action !== "skip");
-  const toCreate = eligible.filter((r) => r.action === "create" && r.status !== "error").length;
-  const toUpdate = eligible.filter((r) => r.action === "update" && r.status !== "error").length;
-  const blocked = eligible.filter((r) => r.status === "error").length;
-  const skipped = rows.length - eligible.length;
+  const [showExcluded, setShowExcluded] = useState(false);
+  const [showBlocked, setShowBlocked] = useState(false);
+
+  const excludedRows = rows.filter((r) => r.excluded);
+  const blockedRows = rows.filter((r) => !r.excluded && (r.action === "skip" || r.status === "error"));
+  const readyRows = rows.filter((r) => !r.excluded && r.action !== "skip" && r.status !== "error");
+  const toCreate = readyRows.filter((r) => r.action === "create").length;
+  const toUpdate = readyRows.filter((r) => r.action === "update").length;
 
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Duplicate handling (Create New mode)</label>
-            <p className="mt-1 text-xs text-slate-400">What to do when a row's {entity.uniqueKey.replace("_", " ")} already exists in the database.</p>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Duplicate handling (Create New mode)</label>
+              <InfoTooltip text={`What it does: decides what happens to a row whose ${entity.uniqueKey.replace("_", " ")} already exists. When to use: only matters in "Create New" mode — Update/Upsert always overwrite by design. How to choose: pick "Skip" for a safe re-run of a file you've already imported, "Overwrite" if you intend the file to be the new source of truth, "Fail" if duplicates likely mean a mistake in your file.`} />
+            </div>
             <select
               value={config.duplicateHandling}
               onChange={(e) => onChange({ ...config, duplicateHandling: e.target.value as ImportConfig["duplicateHandling"] })}
@@ -53,14 +78,20 @@ export function StepConfigure({
                 className="mt-0.5"
               />
               <label htmlFor="autocreate" className="text-sm text-slate-700">
-                <span className="font-medium">Auto-create missing customers</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="font-medium">Auto-create missing customers</span>
+                  <InfoTooltip text="What it does: if an invoice's Customer ID doesn't exist yet, a minimal customer record is created automatically instead of failing the row. When to use: turn this on when your invoice file might reference brand-new customers you haven't punched into Customer Master yet. How to choose: leave it off if you want unknown customer codes caught as errors so you can fix typos before anything is created." />
+                </span>
                 <p className="text-xs text-slate-400">If an invoice references a customer code that doesn't exist yet, create a minimal customer record instead of failing the row.</p>
               </label>
             </div>
           )}
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Date format</label>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Date format</label>
+              <InfoTooltip text="What it does: tells the importer how to read ambiguous dates like 03/04/2026. When to use: change this if your source system exports dates as DD/MM/YYYY or MM/DD/YYYY instead of the unambiguous ISO format. How to choose: check a known date in your file (e.g. the 25th of a month) to see which format it's actually in, then match it here." />
+            </div>
             <p className="mt-1 text-xs text-slate-400">How to interpret ambiguous dates like 03/04/2026.</p>
             <select
               value={config.dateFormat}
@@ -77,7 +108,10 @@ export function StepConfigure({
 
         <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Batch size</label>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Batch size</label>
+              <InfoTooltip text="What it does: how many rows are sent to the database in a single request. When to use the defaults: 500 works well for most files. How to choose: raise it for very large, clean files to import faster; lower it if you're seeing whole batches fail together, so a single bad row affects fewer of its neighbors." />
+            </div>
             <p className="mt-1 text-xs text-slate-400">Rows sent to the database per request. Larger batches are faster; smaller batches isolate errors better.</p>
             <input
               type="number"
@@ -99,43 +133,80 @@ export function StepConfigure({
               className="mt-0.5"
             />
             <label htmlFor="continue" className="text-sm text-slate-700">
-              <span className="font-medium">Continue after recoverable errors</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="font-medium">Continue after recoverable errors</span>
+                <InfoTooltip text="What it does: rows that still have unresolved errors are skipped and reported instead of stopping the whole import. When to use: keep this on for almost every real import. How to choose: only turn it off if you need an all-or-nothing import — e.g. a strict data-migration run where any bad row should halt everything for review." />
+              </span>
               <p className="text-xs text-slate-400">Rows that still have unresolved errors are skipped and reported, instead of stopping the whole import.</p>
             </label>
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Currency</label>
-            <p className="mt-1 text-xs text-slate-400">Used only for formatting in reports — amounts are stored as plain numbers.</p>
-            <input
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Currency</label>
+              <InfoTooltip text="What it does: labels how amounts are displayed in this import's reports. When to use: this system has no per-record currency column, so it's set once for the whole file rather than per row. How to choose: pick the currency your source file's amounts are actually denominated in." />
+            </div>
+            <p className="mt-1 text-xs text-slate-400">Used for formatting in reports — amounts are stored as plain numbers.</p>
+            <select
               value={config.defaultCurrency}
               onChange={(e) => onChange({ ...config, defaultCurrency: e.target.value })}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand"
-            />
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
 
       <div className="rounded-xl border border-brand/30 bg-brand/5 p-5">
         <p className="text-sm font-bold text-slate-900">Ready to import</p>
-        <div className="mt-3 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-          <div>
-            <p className="text-xs text-slate-500">Will create</p>
-            <p className="text-xl font-bold text-emerald-600">{toCreate.toLocaleString()}</p>
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="rounded-lg bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Ready to Import</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-600">{readyRows.length.toLocaleString()}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {toCreate.toLocaleString()} to create, {toUpdate.toLocaleString()} to update
+            </p>
           </div>
-          <div>
-            <p className="text-xs text-slate-500">Will update</p>
-            <p className="text-xl font-bold text-blue-600">{toUpdate.toLocaleString()}</p>
+
+          <div className="rounded-lg bg-white p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Excluded</p>
+              {excludedRows.length > 0 && (
+                <button type="button" onClick={() => setShowExcluded((v) => !v)} className="text-xs font-medium text-brand hover:underline">
+                  {showExcluded ? "Hide" : "Review"}
+                </button>
+              )}
+            </div>
+            <p className="mt-1 text-2xl font-bold text-slate-500">{excludedRows.length.toLocaleString()}</p>
+            <p className="mt-1 text-xs text-slate-500">Manually excluded in Step 4.</p>
           </div>
-          <div>
-            <p className="text-xs text-slate-500">Skipped / excluded</p>
-            <p className="text-xl font-bold text-slate-500">{skipped.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Blocked by errors</p>
-            <p className="text-xl font-bold text-red-600">{blocked.toLocaleString()}</p>
+
+          <div className="rounded-lg bg-white p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Blocked</p>
+              {blockedRows.length > 0 && (
+                <button type="button" onClick={() => setShowBlocked((v) => !v)} className="text-xs font-medium text-brand hover:underline">
+                  {showBlocked ? "Hide" : "Review"}
+                </button>
+              )}
+            </div>
+            <p className="mt-1 text-2xl font-bold text-red-600">{blockedRows.length.toLocaleString()}</p>
+            <p className="mt-1 text-xs text-slate-500">Unresolved errors or duplicate-policy skips.</p>
           </div>
         </div>
+
+        {showExcluded && excludedRows.length > 0 && (
+          <ReviewList title="Excluded rows" rows={excludedRows} uniqueKey={entity.uniqueKey} />
+        )}
+        {showBlocked && blockedRows.length > 0 && (
+          <ReviewList title="Blocked rows" rows={blockedRows} uniqueKey={entity.uniqueKey} />
+        )}
+
         {mode !== "create" && <p className="mt-3 text-xs text-slate-500">Mode: {mode === "update" ? "Update Existing" : "Create or Update (Upsert)"}.</p>}
       </div>
 
@@ -145,13 +216,35 @@ export function StepConfigure({
         </button>
         <button
           type="button"
-          disabled={toCreate + toUpdate === 0}
+          disabled={readyRows.length === 0}
           onClick={onNext}
           className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
         >
           Start import
         </button>
       </div>
+    </div>
+  );
+}
+
+function ReviewList({ title, rows, uniqueKey }: { title: string; rows: ImportRow[]; uniqueKey: string }) {
+  return (
+    <div className="mt-4 rounded-lg border border-slate-200 bg-white">
+      <p className="border-b border-slate-100 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+      <div className="max-h-56 overflow-y-auto">
+        <table className="w-full text-xs">
+          <tbody>
+            {rows.slice(0, 200).map((r) => (
+              <tr key={r.rowIndex} className="border-b border-slate-100 last:border-0">
+                <td className="whitespace-nowrap px-4 py-2 text-slate-400">#{r.rowIndex + 1}</td>
+                <td className="whitespace-nowrap px-4 py-2 font-medium text-slate-700">{r.values[uniqueKey] || "—"}</td>
+                <td className="px-4 py-2 text-slate-500">{reasonFor(r)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > 200 && <p className="px-4 py-2 text-xs text-slate-400">+{rows.length - 200} more not shown.</p>}
     </div>
   );
 }

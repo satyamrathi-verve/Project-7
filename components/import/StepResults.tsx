@@ -9,7 +9,7 @@ import { StatCard } from "@/components/StatCard";
 
 const RECORD_LINKS: Record<string, string | null> = {
   customers: "/masters/customers",
-  invoices: null,
+  invoices: "/invoices",
 };
 
 export function StepResults({
@@ -112,6 +112,9 @@ export function StepResults({
             View imported records
           </Link>
         )}
+        <Link href="/upload/history" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+          View Import History
+        </Link>
         <button
           type="button"
           disabled={!canUndo || undoing}

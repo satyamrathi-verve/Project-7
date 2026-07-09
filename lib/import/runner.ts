@@ -24,13 +24,16 @@ function addDays(iso: string, days: number): string {
 }
 
 function buildCustomerPayload(values: Record<string, string>) {
+  // Country/State have no columns of their own in this schema — folded into the
+  // single `address` text column rather than dropped on the floor.
+  const address = [values.address, values.state, values.country].filter(Boolean).join(", ") || null;
   return {
     code: values.code,
     name: values.name,
     contact_person: values.contact_person || null,
     email: values.email || null,
     phone: values.phone || null,
-    address: values.address || null,
+    address,
     gstin: values.gstin || null,
     pan: values.pan || null,
     credit_limit: values.credit_limit ? Number(values.credit_limit) : 0,
@@ -42,9 +45,11 @@ function buildCustomerPayload(values: Record<string, string>) {
 function buildInvoicePayload(values: Record<string, string>, customerId: string, customerCreditDays: number, dateFormat: ImportConfig["dateFormat"]) {
   const invoiceDate = parseDateFlexible(values.invoice_date, dateFormat)!;
   const dueDate = values.due_date ? parseDateFlexible(values.due_date, dateFormat) : null;
-  const subtotal = Number(values.subtotal || 0);
   const taxAmount = values.tax_amount ? Number(values.tax_amount) : 0;
-  const total = values.total ? Number(values.total) : subtotal + taxAmount;
+  const total = Number(values.total || 0);
+  // Subtotal is optional (Invoice Amount is the mandatory field) — back it out from
+  // the total when the file didn't supply one.
+  const subtotal = values.subtotal !== "" ? Number(values.subtotal) : total - taxAmount;
   const status = values.status && ["open", "partial", "paid", "overdue"].includes(values.status.toLowerCase())
     ? values.status.toLowerCase()
     : "open";
@@ -281,7 +286,7 @@ async function runInvoiceBatch(
   }
 
   const byNo = new Map((data ?? []).map((d) => [String((d as Record<string, unknown>).invoice_no), (d as Record<string, unknown>).id as string]));
-  const newlyCreatedIds: { id: string; subtotal: string; notes: string }[] = [];
+  const newlyCreatedIds: { id: string; total: string; notes: string }[] = [];
 
   for (const row of resolvable) {
     const id = byNo.get(row.values.invoice_no);
@@ -289,7 +294,7 @@ async function runInvoiceBatch(
     if (!id) continue;
     if (row.action === "create") {
       undoInvoices.createdIds.push(id);
-      newlyCreatedIds.push({ id, subtotal: row.values.subtotal, notes: row.values.notes });
+      newlyCreatedIds.push({ id, total: row.values.total, notes: row.values.notes });
     } else if (row.action === "update" && row.existing) {
       undoInvoices.updatedPrev.push({ id, prev: row.existing });
     }
@@ -301,8 +306,8 @@ async function runInvoiceBatch(
         invoice_id: r.id,
         description: r.notes || "Imported invoice",
         qty: 1,
-        rate: Number(r.subtotal || 0),
-        amount: Number(r.subtotal || 0),
+        rate: Number(r.total || 0),
+        amount: Number(r.total || 0),
       }))
     );
   }
@@ -313,8 +318,8 @@ async function insertDefaultLineItem(client: SupabaseClient, invoiceId: string, 
     invoice_id: invoiceId,
     description: values.notes || "Imported invoice",
     qty: 1,
-    rate: Number(values.subtotal || 0),
-    amount: Number(values.subtotal || 0),
+    rate: Number(values.total || 0),
+    amount: Number(values.total || 0),
   });
 }
 

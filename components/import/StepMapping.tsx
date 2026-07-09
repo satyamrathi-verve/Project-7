@@ -5,18 +5,29 @@ import type { EntityConfig, FieldMapping, MappingConfidence, ParsedCsv } from "@
 import { confidenceLabel } from "@/lib/import/match";
 import { listMappingTemplates, saveMappingTemplate, deleteMappingTemplate } from "@/lib/import/templates";
 
-const TONE_CLASSES: Record<string, string> = {
+const CONFIDENCE_TONE: Record<string, string> = {
   high: "bg-emerald-100 text-emerald-700",
   medium: "bg-blue-100 text-blue-700",
   low: "bg-amber-100 text-amber-700",
   none: "bg-slate-100 text-slate-400",
 };
 
+/*
+  One row per DESTINATION field (not per CSV column) — each import type only ever
+  shows its own fields (EntityConfig.fields is already scoped per entity, see
+  lib/import/entities.ts), and the whole "which CSV column feeds this?" +
+  "is it required?" + "is it mapped?" picture lives in a single table instead of
+  being split across a separate required-fields list and a column-mapping list.
+  This also makes mapping tolerant of any CSV column layout: a field's dropdown
+  just offers every header in the file, so renamed/reordered/extra columns are a
+  non-issue — you only ever pick the one that actually feeds each field.
+*/
 export function StepMapping({
   entity,
   parsed,
   mapping,
   confidence,
+  autoMapping,
   onChange,
   onReset,
   onBack,
@@ -26,6 +37,8 @@ export function StepMapping({
   parsed: ParsedCsv;
   mapping: FieldMapping;
   confidence: MappingConfidence;
+  /** The mapping autoMapHeaders originally suggested — used only to label confidence as "auto" vs "manual". */
+  autoMapping: FieldMapping;
   onChange: (mapping: FieldMapping) => void;
   onReset: () => void;
   onBack: () => void;
@@ -34,20 +47,30 @@ export function StepMapping({
   const [templateName, setTemplateName] = useState("");
   const [templates, setTemplates] = useState(() => listMappingTemplates(entity.entity));
 
-  const mappedFieldKeys = useMemo(() => new Set(Object.values(mapping).filter(Boolean) as string[]), [mapping]);
-  const requiredFields = entity.fields.filter((f) => f.required);
-  const missingRequired = requiredFields.filter((f) => !mappedFieldKeys.has(f.key));
-
-  function setHeaderTarget(header: string, target: string | null) {
-    const next = { ...mapping };
-    if (target) {
-      // A target field can only be claimed by one column — clear it elsewhere first.
-      for (const h of Object.keys(next)) {
-        if (next[h] === target) next[h] = null;
-      }
+  const headerForField = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const [header, target] of Object.entries(mapping)) {
+      if (target) m.set(target, header);
     }
-    next[header] = target;
+    return m;
+  }, [mapping]);
+
+  const claimedHeaders = useMemo(() => new Set(Object.values(mapping).filter(Boolean) as string[]).size, [mapping]);
+  const orderedFields = useMemo(() => [...entity.fields].sort((a, b) => Number(b.required) - Number(a.required)), [entity.fields]);
+  const missingRequiredCount = entity.fields.filter((f) => f.required && !headerForField.has(f.key)).length;
+
+  function setFieldSource(fieldKey: string, header: string | null) {
+    const next = { ...mapping };
+    // A destination field can only be fed by one column — clear any prior claim.
+    for (const h of Object.keys(next)) {
+      if (next[h] === fieldKey) next[h] = null;
+    }
+    if (header) next[header] = fieldKey;
     onChange(next);
+  }
+
+  function sampleFor(header: string): string {
+    return parsed.rows.find((r) => (r[header] ?? "").trim() !== "")?.[header] ?? "";
   }
 
   return (
@@ -103,49 +126,83 @@ export function StepMapping({
         </div>
       </div>
 
-      {missingRequired.length > 0 && (
-        <p className="rounded-lg bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
-          Map all required fields to continue — still missing: <strong>{missingRequired.map((f) => f.label).join(", ")}</strong>
-        </p>
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-700">CSV mapping for {entity.label}</h3>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-slate-400">
+            {claimedHeaders} of {parsed.headers.length} CSV columns used
+          </span>
+          {missingRequiredCount > 0 && (
+            <span className="rounded-full bg-red-100 px-2.5 py-1 font-semibold text-red-700">{missingRequiredCount} required field(s) missing</span>
+          )}
+        </div>
+      </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left">
+              <th className="px-4 py-3 font-semibold text-slate-600">Destination field</th>
               <th className="px-4 py-3 font-semibold text-slate-600">CSV column</th>
               <th className="px-4 py-3 font-semibold text-slate-600">Sample value</th>
-              <th className="px-4 py-3 font-semibold text-slate-600">Maps to</th>
-              <th className="px-4 py-3 font-semibold text-slate-600">Confidence</th>
+              <th className="px-4 py-3 font-semibold text-slate-600">Mapping status</th>
             </tr>
           </thead>
           <tbody>
-            {parsed.headers.map((header) => {
-              const target = mapping[header] ?? null;
-              const score = confidence[header] ?? 0;
-              const { label, tone } = confidenceLabel(target ? score : 0);
-              const sample = parsed.rows.find((r) => (r[header] ?? "").trim() !== "")?.[header] ?? "";
+            {orderedFields.map((f) => {
+              const selectedHeader = headerForField.get(f.key) ?? "";
+              const isAutoMatch = selectedHeader !== "" && autoMapping[selectedHeader] === f.key;
+              const { label: confLabel, tone } = confidenceLabel(isAutoMatch ? confidence[selectedHeader] ?? 0 : 0);
+              const isMissingRequired = f.required && !selectedHeader;
+
               return (
-                <tr key={header} className="border-b border-slate-100 last:border-0">
-                  <td className="px-4 py-3 font-medium text-slate-800">{header || <em className="text-slate-400">(blank)</em>}</td>
-                  <td className="max-w-[16rem] truncate px-4 py-3 text-slate-500">{sample || <em className="text-slate-300">empty</em>}</td>
+                <tr key={f.key} className={`border-b border-slate-100 last:border-0 ${isMissingRequired ? "bg-red-50" : ""}`}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-800">{f.label}</span>
+                      {f.required ? (
+                        <span className="flex-none rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">Required</span>
+                      ) : (
+                        <span className="flex-none rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">Optional</span>
+                      )}
+                    </div>
+                    {f.help && <p className="mt-0.5 text-xs text-slate-400">{f.help}</p>}
+                  </td>
                   <td className="px-4 py-3">
                     <select
-                      value={target ?? ""}
-                      onChange={(e) => setHeaderTarget(header, e.target.value || null)}
-                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-brand"
+                      value={selectedHeader}
+                      onChange={(e) => setFieldSource(f.key, e.target.value || null)}
+                      className={`rounded-lg border bg-white px-2.5 py-1.5 text-xs outline-none focus:border-brand ${
+                        isMissingRequired ? "border-red-300" : "border-slate-300"
+                      }`}
                     >
-                      <option value="">— Ignore this column —</option>
-                      {entity.fields.map((f) => (
-                        <option key={f.key} value={f.key} disabled={mappedFieldKeys.has(f.key) && mapping[header] !== f.key}>
-                          {f.label}
-                          {f.required ? " *" : ""}
+                      <option value="">— Not mapped —</option>
+                      {parsed.headers.map((h) => (
+                        <option key={h} value={h} disabled={Boolean(mapping[h]) && mapping[h] !== f.key}>
+                          {h || "(blank header)"}
                         </option>
                       ))}
                     </select>
                   </td>
+                  <td className="max-w-[14rem] truncate px-4 py-3 text-slate-500">
+                    {selectedHeader ? sampleFor(selectedHeader) || <em className="text-slate-300">empty</em> : "—"}
+                  </td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${TONE_CLASSES[tone]}`}>{target ? label : "—"}</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {selectedHeader ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">Mapped</span>
+                      ) : f.required ? (
+                        <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Missing — required</span>
+                      ) : (
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-400">Unmapped — optional</span>
+                      )}
+                      {selectedHeader && isAutoMatch && confidence[selectedHeader] > 0 && (
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${CONFIDENCE_TONE[tone]}`}>{confLabel}</span>
+                      )}
+                      {selectedHeader && !isAutoMatch && (
+                        <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">Manual</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -154,30 +211,13 @@ export function StepMapping({
         </table>
       </div>
 
-      <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Target fields</p>
-        <div className="flex flex-wrap gap-1.5">
-          {entity.fields.map((f) => (
-            <span
-              key={f.key}
-              className={`rounded-full px-2.5 py-1 text-xs ${
-                mappedFieldKeys.has(f.key) ? "bg-emerald-100 text-emerald-700" : f.required ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-500"
-              }`}
-            >
-              {f.label}
-              {f.required ? " *" : ""}
-            </span>
-          ))}
-        </div>
-      </div>
-
       <div className="flex justify-between">
         <button type="button" onClick={onBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100">
           Back
         </button>
         <button
           type="button"
-          disabled={missingRequired.length > 0}
+          disabled={missingRequiredCount > 0}
           onClick={onNext}
           className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
         >

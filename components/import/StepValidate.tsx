@@ -2,15 +2,25 @@
 
 import { useMemo, useState } from "react";
 import { FixedSizeList, type ListChildComponentProps } from "react-window";
-import type { EntityConfig, ImportRow, RowStatus } from "@/lib/import/types";
+import type { EntityConfig, ImportRow, RowStatus, RowCategory } from "@/lib/import/types";
+import { categorizeRow } from "@/lib/import/validate";
 
-type StatusFilter = "all" | RowStatus | "excluded";
+type Filter = "all" | RowCategory;
 
 const STATUS_DOT: Record<RowStatus, string> = {
   valid: "bg-emerald-500",
   warning: "bg-amber-500",
   error: "bg-red-500",
 };
+
+const CARD_DEFS: { key: Filter; label: string; tone: string; ring: string }[] = [
+  { key: "all", label: "Total", tone: "text-slate-800", ring: "ring-slate-400" },
+  { key: "valid", label: "Valid", tone: "text-emerald-600", ring: "ring-emerald-400" },
+  { key: "duplicate", label: "Duplicate", tone: "text-purple-600", ring: "ring-purple-400" },
+  { key: "missing", label: "Missing Data", tone: "text-red-600", ring: "ring-red-400" },
+  { key: "invalid", label: "Invalid Data", tone: "text-amber-600", ring: "ring-amber-400" },
+  { key: "excluded", label: "Excluded", tone: "text-slate-400", ring: "ring-slate-300" },
+];
 
 export function StepValidate({
   entity,
@@ -30,34 +40,32 @@ export function StepValidate({
   onNext: () => void;
 }) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
+  // Every row is categorized exactly once (see categorizeRow), so these five counts
+  // always add up to the total — the cards, the filter they drive, and the row count
+  // shown below can never disagree with each other.
+  const categorized = useMemo(() => rows.map((r) => ({ row: r, category: categorizeRow(r, entity.uniqueKey) })), [rows, entity.uniqueKey]);
+
   const counts = useMemo(() => {
-    const c = { total: rows.length, valid: 0, warning: 0, error: 0, excluded: 0, duplicates: 0 };
-    for (const r of rows) {
-      if (r.excluded) c.excluded++;
-      else c[r.status]++;
-      if (r.issues.some((i) => i.field === entity.uniqueKey)) c.duplicates++;
-    }
+    const c: Record<Filter, number> = { all: rows.length, valid: 0, duplicate: 0, missing: 0, invalid: 0, excluded: 0 };
+    for (const { category } of categorized) c[category]++;
     return c;
-  }, [rows, entity.uniqueKey]);
+  }, [categorized, rows.length]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (statusFilter === "excluded" && !r.excluded) return false;
-      if (statusFilter !== "excluded" && r.excluded) return false;
-      if (statusFilter !== "all" && statusFilter !== "excluded" && r.status !== statusFilter) return false;
-      if (term) {
-        const hay = Object.values(r.values).join(" ").toLowerCase();
-        if (!hay.includes(term)) return false;
-      }
-      return true;
-    });
-  }, [rows, search, statusFilter]);
+    return categorized
+      .filter(({ category }) => filter === "all" || category === filter)
+      .filter(({ row }) => {
+        if (!term) return true;
+        return Object.values(row.values).join(" ").toLowerCase().includes(term);
+      })
+      .map(({ row }) => row);
+  }, [categorized, filter, search]);
 
-  const blockingErrors = counts.error;
+  const blockingErrors = rows.filter((r) => !r.excluded && r.status === "error").length;
 
   // Fixed pixel widths (not rem/fr) so the header row and the virtualized list — two
   // separate DOM trees — measure out to the exact same total width. FixedSizeList
@@ -136,19 +144,23 @@ export function StepValidate({
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {[
-          { label: "Total", value: counts.total, tone: "text-slate-800" },
-          { label: "Valid", value: counts.valid, tone: "text-emerald-600" },
-          { label: "Warnings", value: counts.warning, tone: "text-amber-600" },
-          { label: "Errors", value: counts.error, tone: "text-red-600" },
-          { label: "Duplicates", value: counts.duplicates, tone: "text-purple-600" },
-          { label: "Excluded", value: counts.excluded, tone: "text-slate-400" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{s.label}</p>
-            <p className={`mt-1 text-2xl font-bold ${s.tone}`}>{s.value.toLocaleString()}</p>
-          </div>
-        ))}
+        {CARD_DEFS.map((c) => {
+          const active = filter === c.key;
+          return (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => setFilter(c.key)}
+              aria-pressed={active}
+              className={`rounded-xl border p-4 text-left transition-all ${
+                active ? `border-transparent bg-white ring-2 ${c.ring}` : "border-slate-200 bg-white hover:border-slate-300"
+              }`}
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{c.label}</p>
+              <p className={`mt-1 text-2xl font-bold ${c.tone}`}>{counts[c.key].toLocaleString()}</p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -159,18 +171,11 @@ export function StepValidate({
             placeholder="Search rows…"
             className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-brand"
           />
-          {(["all", "error", "warning", "valid", "excluded"] as StatusFilter[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setStatusFilter(f)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize ${
-                statusFilter === f ? "bg-brand text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {f}
+          {filter !== "all" && (
+            <button type="button" onClick={() => setFilter("all")} className="rounded-full bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-900">
+              Clear filter ×
             </button>
-          ))}
+          )}
         </div>
         <button type="button" onClick={onRevalidate} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
           Revalidate all
@@ -243,8 +248,9 @@ export function StepValidate({
       </div>
 
       <p className="text-xs text-slate-400">
-        Showing {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} rows. Edits save on blur — fix a highlighted cell and its message in the
-        Issues column updates instantly.
+        Showing {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} rows
+        {filter !== "all" && <> — filtered to <strong>{CARD_DEFS.find((c) => c.key === filter)?.label}</strong></>}
+        {search && <> matching “{search}”</>}. Edits save on blur — fix a highlighted cell and its message in the Issues column updates instantly.
       </p>
 
       <div className="flex items-center justify-between">

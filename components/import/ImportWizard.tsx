@@ -7,7 +7,9 @@ import { ENTITY_CONFIGS } from "@/lib/import/entities";
 import { autoMapHeaders } from "@/lib/import/match";
 import { buildInitialRows, fetchDbCheckContext, applyDbChecks, type DbCheckContext } from "@/lib/import/validate";
 import { runImport, undoImportRun } from "@/lib/import/runner";
-import { appendAuditEntry } from "@/lib/import/templates";
+import { appendAuditEntry, type AuditStatus } from "@/lib/import/templates";
+import { getCurrentUser, type CurrentUser } from "@/lib/auth";
+import Link from "next/link";
 import type {
   CsvFileIssue,
   FieldMapping,
@@ -42,10 +44,21 @@ export function ImportWizard() {
 
   const [mapping, setMapping] = useState<FieldMapping>({});
   const [confidence, setConfidence] = useState<MappingConfidence>({});
+  const [autoMapping, setAutoMapping] = useState<FieldMapping>({});
 
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [dbCtx, setDbCtx] = useState<DbCheckContext | null>(null);
   const [checkingDb, setCheckingDb] = useState(false);
+
+  // Detected from the signed-in session (see lib/auth.ts). Starts null and is filled
+  // in after mount, not read synchronously during render: this component is
+  // server-rendered first (where `window`/localStorage don't exist), so reading it
+  // eagerly would make the server's HTML say "not signed in" while the client
+  // immediately renders a different name — a React hydration mismatch.
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
 
   const [config, setConfig] = useState<ImportConfig>(DEFAULT_IMPORT_CONFIG);
   const [progress, setProgress] = useState<ImportProgressState | null>(null);
@@ -77,6 +90,7 @@ export function ImportWizard() {
       const { mapping: m, confidence: c } = autoMapHeaders(parsed.headers, entityConfig);
       setMapping(m);
       setConfidence(c);
+      setAutoMapping(m);
     }
   }
 
@@ -151,11 +165,19 @@ export function ImportWizard() {
         : runResult;
 
       setResult(merged);
+
+      const imported = runResult.created + runResult.updated;
+      const status: AuditStatus = runResult.failed === 0 ? "success" : imported === 0 ? "failed" : "partial";
+      const failedSample = runResult.rows
+        .filter((r) => r.action === "failed")
+        .slice(0, 20)
+        .map((r) => ({ key: r.key, error: r.error ?? "Unknown error" }));
+
       appendAuditEntry({
-        id: `${Date.now()}`,
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         entity: entityConfig.entity,
         mode,
-        fileName: parsedCsv?.fileName ?? "unknown.csv",
+        fileName: (mergeInto ? "(retry) " : "") + (parsedCsv?.fileName ?? "unknown.csv"),
         rowCount: targetRows.length,
         created: runResult.created,
         updated: runResult.updated,
@@ -163,7 +185,9 @@ export function ImportWizard() {
         failed: runResult.failed,
         durationMs: runResult.durationMs,
         performedAt: new Date().toISOString(),
-        performedBy: "current user",
+        performedBy: currentUser?.name ?? "Unknown user",
+        status,
+        failedSample,
       });
       goTo(7);
     } catch (err) {
@@ -201,6 +225,22 @@ export function ImportWizard() {
 
   return (
     <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs">
+        {currentUser ? (
+          <span className="text-slate-500">
+            Importing as <span className="font-semibold text-slate-700">{currentUser.name}</span> — recorded automatically in Import History
+          </span>
+        ) : (
+          <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-amber-800">
+            You're not signed in — this import will be logged as "Unknown user".{" "}
+            <Link href="/signin" className="font-medium underline hover:text-amber-900">
+              Sign in
+            </Link>{" "}
+            to have it attributed to you.
+          </span>
+        )}
+      </div>
+
       <Stepper current={step} furthest={furthest} onJump={goTo} />
 
       {runError && <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{runError}</p>}
@@ -217,11 +257,13 @@ export function ImportWizard() {
           parsed={parsedCsv}
           mapping={mapping}
           confidence={confidence}
+          autoMapping={autoMapping}
           onChange={setMapping}
           onReset={() => {
             const { mapping: m, confidence: c } = autoMapHeaders(parsedCsv.headers, entityConfig);
             setMapping(m);
             setConfidence(c);
+            setAutoMapping(m);
           }}
           onBack={() => goTo(2)}
           onNext={proceedToValidation}

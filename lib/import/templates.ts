@@ -55,6 +55,8 @@ export function deleteMappingTemplate(id: string) {
   }
 }
 
+export type AuditStatus = "success" | "failed" | "partial";
+
 export interface AuditEntry {
   id: string;
   entity: ImportEntity;
@@ -68,6 +70,9 @@ export interface AuditEntry {
   durationMs: number;
   performedAt: string;
   performedBy: string;
+  status: AuditStatus;
+  /** First few failed rows, kept small so the log doesn't bloat localStorage. */
+  failedSample: { key: string; error: string }[];
 }
 
 export function appendAuditEntry(entry: AuditEntry) {
@@ -89,5 +94,25 @@ export function listAuditLog(): AuditEntry[] {
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
+  }
+}
+
+export function deleteAuditEntry(id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(AUDIT_KEY);
+    const all: AuditEntry[] = raw ? JSON.parse(raw) : [];
+    window.localStorage.setItem(AUDIT_KEY, JSON.stringify(all.filter((e) => e.id !== id)));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearAuditLog() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(AUDIT_KEY);
+  } catch {
+    // ignore
   }
 }
