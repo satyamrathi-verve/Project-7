@@ -2,17 +2,32 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase, isConfigured } from "@/lib/supabase";
-import type { Invoice, Receipt, ReceiptAllocation, Customer } from "@/lib/types";
+import type { Invoice, Receipt, ReceiptAllocation, Customer, ReminderLog, InvoiceStatus } from "@/lib/types";
 import { PageHeader } from "@/components/PageHeader";
 import { NotConfigured } from "@/components/NotConfigured";
+import { StatCard } from "@/components/StatCard";
+import { formatMoney, formatDateTime } from "@/lib/format";
+import { computeCustomerRisk, type CustomerRisk } from "@/lib/customerRisk";
+import type { InsightSeverity } from "@/lib/collectionHealth";
 
-type InvoiceRow = Invoice & { customers: { name: string; code: string } | null };
+import { OutstandingTrendChart } from "@/components/dashboard/OutstandingTrendChart";
+import { CollectionsChart } from "@/components/dashboard/CollectionsChart";
+import { AgeingChart } from "@/components/dashboard/AgeingChart";
+import { DistributionDonut } from "@/components/dashboard/DistributionDonut";
+import { OutstandingOverviewCard } from "@/components/dashboard/OutstandingOverviewCard";
+import { PriorityInvoicesCard, type PriorityRow, type Priority } from "@/components/dashboard/PriorityInvoicesCard";
+import { RecentInvoicesCard, type RecentInvoiceRow } from "@/components/dashboard/RecentInvoicesCard";
+import { CustomerRiskCard } from "@/components/dashboard/CustomerRiskCard";
+import { SmartInsightsCard, type DashboardInsight } from "@/components/dashboard/SmartInsightsCard";
+import { ActivityFeedCard, buildActivityEvents } from "@/components/dashboard/ActivityFeedCard";
+import { AgeingSummaryCards, type AgeingSummaryItem } from "@/components/dashboard/AgeingSummaryCards";
+import { CustomerHealthCard, type HealthSegment } from "@/components/dashboard/CustomerHealthCard";
+import { QuickActionsFab } from "@/components/dashboard/QuickActionsFab";
+
+type InvoiceRow = Invoice & { customers: { name: string; code: string; phone: string | null } | null };
 
 const DAY = 24 * 60 * 60 * 1000;
 const today = () => new Date(new Date().toDateString());
-
-const inr = (n: number) =>
-  `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const monthKey = (d: string) => {
   const dt = new Date(d);
@@ -23,147 +38,382 @@ const monthLabel = (key: string) => {
   return new Date(y, m - 1, 1).toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
 };
 
-/** Not available: no AP/vendor, GST, TDS, GL-posting, or bank-feed tables in the backend. */
-const NOT_AVAILABLE = [
-  "AP Ageing",
-  "GST Summary",
-  "TDS Summary",
-  "Trial Balance Health",
-  "Bank Reconciliation Status",
-  "Compliance Calendar",
-  "Tax Payment Reminders",
-  "DPO",
-];
+/** Last N calendar-month keys ending this month, oldest first, e.g. ["2025-08", ..., "2026-07"]. */
+function lastNMonthKeys(n: number): string[] {
+  const t = today();
+  const keys: string[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(t.getFullYear(), t.getMonth() - i, 1);
+    keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return keys;
+}
+
+const RANGE_OPTIONS = [
+  { months: 3, label: "3M" },
+  { months: 6, label: "6M" },
+  { months: 12, label: "12M" },
+] as const;
 
 export default function DashboardPage() {
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [allocations, setAllocations] = useState<ReceiptAllocation[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [reminders, setReminders] = useState<ReminderLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [rangeMonths, setRangeMonths] = useState<3 | 6 | 12>(12);
+
+  async function load() {
+    if (!supabase) return;
+    setLoading(true);
+    const [invRes, recRes, allocRes, custRes, remRes] = await Promise.all([
+      supabase.from("invoices").select("*, customers(name, code, phone)"),
+      supabase.from("receipts").select("*"),
+      supabase.from("receipt_allocations").select("*"),
+      supabase.from("customers").select("*"),
+      supabase.from("reminder_log").select("*"),
+    ]);
+    const err = invRes.error || recRes.error || allocRes.error || custRes.error || remRes.error;
+    if (err) setError(err.message);
+    setInvoices((invRes.data as InvoiceRow[]) ?? []);
+    setReceipts((recRes.data as Receipt[]) ?? []);
+    setAllocations((allocRes.data as ReceiptAllocation[]) ?? []);
+    setCustomers((custRes.data as Customer[]) ?? []);
+    setReminders((remRes.data as ReminderLog[]) ?? []);
+    setLoading(false);
+    setLastUpdated(new Date());
+  }
 
   useEffect(() => {
-    async function load() {
-      if (!supabase) return;
-      setLoading(true);
-      const [invRes, recRes, allocRes, custRes] = await Promise.all([
-        supabase.from("invoices").select("*, customers(name, code)"),
-        supabase.from("receipts").select("*"),
-        supabase.from("receipt_allocations").select("*"),
-        supabase.from("customers").select("*"),
-      ]);
-      const err = invRes.error || recRes.error || allocRes.error || custRes.error;
-      if (err) setError(err.message);
-      setInvoices((invRes.data as InvoiceRow[]) ?? []);
-      setReceipts((recRes.data as Receipt[]) ?? []);
-      setAllocations((allocRes.data as ReceiptAllocation[]) ?? []);
-      setCustomers((custRes.data as Customer[]) ?? []);
-      setLoading(false);
-    }
     load();
   }, []);
 
   const model = useMemo(() => {
-    const allocatedByInvoice = new Map<string, number>();
-    for (const a of allocations) {
-      allocatedByInvoice.set(a.invoice_id, (allocatedByInvoice.get(a.invoice_id) ?? 0) + Number(a.amount));
-    }
-    const outstanding = (inv: Invoice) =>
-      Math.max(0, Number(inv.total) - (allocatedByInvoice.get(inv.id) ?? 0));
-
     const t = today();
-    const isOverdue = (inv: Invoice) =>
-      (inv.status === "open" || inv.status === "partial") && new Date(inv.due_date) < t;
+    const todayISO = t.toISOString();
 
+    const allocationsByInvoiceId = new Map<string, ReceiptAllocation[]>();
+    for (const a of allocations) {
+      const list = allocationsByInvoiceId.get(a.invoice_id) ?? [];
+      list.push(a);
+      allocationsByInvoiceId.set(a.invoice_id, list);
+    }
+    const receiptsById = new Map(receipts.map((r) => [r.id, r]));
+
+    const outstanding = (inv: Invoice) => {
+      const allocs = allocationsByInvoiceId.get(inv.id) ?? [];
+      const paid = allocs.reduce((s, a) => s + Number(a.amount), 0);
+      return Math.max(0, Number(inv.total) - paid);
+    };
+    const paidOf = (inv: Invoice) => Number(inv.total) - outstanding(inv);
+
+    const effectiveStatus = (inv: Invoice): InvoiceStatus => {
+      if ((inv.status === "open" || inv.status === "partial") && new Date(inv.due_date) < t) return "overdue";
+      return inv.status;
+    };
+
+    // ---- Headline aggregates ----
     const totalOutstanding = invoices.reduce((s, i) => s + outstanding(i), 0);
-    const overdueAmount = invoices.filter(isOverdue).reduce((s, i) => s + outstanding(i), 0);
-    const overdueCount = invoices.filter(isOverdue).length;
+    const overdueInvoices = invoices.filter((i) => effectiveStatus(i) === "overdue");
+    const overdueAmount = overdueInvoices.reduce((s, i) => s + outstanding(i), 0);
 
     const startOfMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+    const endOfMonth = new Date(t.getFullYear(), t.getMonth() + 1, 0);
+    const weekAhead = new Date(t.getTime() + 7 * DAY);
+
     const invoicedThisMonth = invoices
       .filter((i) => new Date(i.invoice_date) >= startOfMonth)
       .reduce((s, i) => s + Number(i.total), 0);
     const collectedThisMonth = receipts
       .filter((r) => new Date(r.receipt_date) >= startOfMonth)
       .reduce((s, r) => s + Number(r.amount), 0);
+    const collectedToday = receipts
+      .filter((r) => new Date(new Date(r.receipt_date).toDateString()).getTime() === t.getTime())
+      .reduce((s, r) => s + Number(r.amount), 0);
 
-    // DSO: trailing 90-day sales basis
+    const expectedThisWeek = invoices
+      .filter((i) => i.status !== "paid" && new Date(i.due_date) <= weekAhead)
+      .reduce((s, i) => s + outstanding(i), 0);
+    const expectedThisMonth = invoices
+      .filter((i) => i.status !== "paid" && new Date(i.due_date) <= endOfMonth)
+      .reduce((s, i) => s + outstanding(i), 0);
+
+    // Average Collection Period (DSO), trailing-90-day sales basis
     const ninetyAgo = new Date(t.getTime() - 90 * DAY);
     const salesTrailing90 = invoices
       .filter((i) => new Date(i.invoice_date) >= ninetyAgo)
       .reduce((s, i) => s + Number(i.total), 0);
     const dso = salesTrailing90 > 0 ? (totalOutstanding / salesTrailing90) * 90 : 0;
 
-    const collectionEfficiency =
-      invoicedThisMonth > 0 ? Math.min(100, (collectedThisMonth / invoicedThisMonth) * 100) : 0;
+    const collectionEfficiency = invoicedThisMonth > 0 ? Math.min(100, (collectedThisMonth / invoicedThisMonth) * 100) : 0;
 
-    // AR ageing buckets
+    const openInvoices = invoices.filter((i) => effectiveStatus(i) === "open" || effectiveStatus(i) === "partial");
+    const openInvoicesAmount = openInvoices.reduce((s, i) => s + outstanding(i), 0);
+
+    // Reminders sent per invoice, most recent first — used for "pending follow-up" detection.
+    const lastReminderByInvoice = new Map<string, string>();
+    for (const r of reminders) {
+      if (!r.invoice_id) continue;
+      const existing = lastReminderByInvoice.get(r.invoice_id);
+      if (!existing || existing < r.sent_at) lastReminderByInvoice.set(r.invoice_id, r.sent_at);
+    }
+    const pendingFollowups = overdueInvoices.filter((i) => {
+      const last = lastReminderByInvoice.get(i.id);
+      if (!last) return true;
+      return (t.getTime() - new Date(last).getTime()) / DAY >= 7;
+    }).length;
+
+    // ---- Monthly series (up to 12 months) for charts + sparklines ----
+    const monthKeys = lastNMonthKeys(12);
+    const invoicedByMonth = new Map<string, number>();
+    const collectedByMonth = new Map<string, number>();
+    for (const inv of invoices) invoicedByMonth.set(monthKey(inv.invoice_date), (invoicedByMonth.get(monthKey(inv.invoice_date)) ?? 0) + Number(inv.total));
+    for (const r of receipts) collectedByMonth.set(monthKey(r.receipt_date), (collectedByMonth.get(monthKey(r.receipt_date)) ?? 0) + Number(r.amount));
+
+    // Running outstanding at each month-end = cumulative invoiced-to-date minus cumulative collected-to-date.
+    let cumInvoiced = 0;
+    let cumCollected = 0;
+    const outstandingTrend: { label: string; value: number }[] = [];
+    const collectionsSeries: { label: string; invoiced: number; collected: number }[] = [];
+    for (const k of monthKeys) {
+      cumInvoiced += invoicedByMonth.get(k) ?? 0;
+      cumCollected += collectedByMonth.get(k) ?? 0;
+      outstandingTrend.push({ label: monthLabel(k), value: Math.max(0, cumInvoiced - cumCollected) });
+      collectionsSeries.push({ label: monthLabel(k), invoiced: invoicedByMonth.get(k) ?? 0, collected: collectedByMonth.get(k) ?? 0 });
+    }
+    const outstandingSparkline = outstandingTrend.slice(-6).map((p) => p.value);
+    const collectedSparkline = collectionsSeries.slice(-6).map((p) => p.collected);
+    const invoicedSparkline = collectionsSeries.slice(-6).map((p) => p.invoiced);
+
+    // ---- Ageing buckets ----
     const buckets = { notDue: 0, b0_30: 0, b31_60: 0, b61_90: 0, b90plus: 0 };
+    const bucketCounts = { notDue: 0, b0_30: 0, b31_60: 0, b61_90: 0, b90plus: 0 };
     for (const inv of invoices) {
       const out = outstanding(inv);
       if (out <= 0 || inv.status === "paid") continue;
       const days = Math.floor((t.getTime() - new Date(inv.due_date).getTime()) / DAY);
-      if (days < 0) buckets.notDue += out;
-      else if (days <= 30) buckets.b0_30 += out;
-      else if (days <= 60) buckets.b31_60 += out;
-      else if (days <= 90) buckets.b61_90 += out;
-      else buckets.b90plus += out;
+      if (days < 0) { buckets.notDue += out; bucketCounts.notDue++; }
+      else if (days <= 30) { buckets.b0_30 += out; bucketCounts.b0_30++; }
+      else if (days <= 60) { buckets.b31_60 += out; bucketCounts.b31_60++; }
+      else if (days <= 90) { buckets.b61_90 += out; bucketCounts.b61_90++; }
+      else { buckets.b90plus += out; bucketCounts.b90plus++; }
     }
 
-    // Revenue trend: last 6 months, by invoice_date
-    const revByMonth = new Map<string, number>();
+    // ---- Receivable distribution (by amount) ----
+    const paidAmount = invoices.filter((i) => effectiveStatus(i) === "paid").reduce((s, i) => s + Number(i.total), 0);
+    const openAmount = openInvoices.reduce((s, i) => s + outstanding(i), 0);
+
+    // ---- Per-customer risk (for Customer Risk card + Health segments + High Risk KPI) ----
+    const invoicesByCustomer = new Map<string, Invoice[]>();
     for (const inv of invoices) {
-      const k = monthKey(inv.invoice_date);
-      revByMonth.set(k, (revByMonth.get(k) ?? 0) + Number(inv.total));
+      const list = invoicesByCustomer.get(inv.customer_id) ?? [];
+      list.push(inv);
+      invoicesByCustomer.set(inv.customer_id, list);
     }
-    const revenueTrend = [...revByMonth.entries()]
-      .sort(([a], [b]) => (a < b ? -1 : 1))
-      .slice(-6);
+    const customerRisks: CustomerRisk[] = customers
+      .filter((c) => (invoicesByCustomer.get(c.id) ?? []).length > 0)
+      .map((c) =>
+        computeCustomerRisk({
+          customer: c,
+          invoices: invoicesByCustomer.get(c.id) ?? [],
+          allocationsByInvoiceId,
+          receiptsById,
+          todayISO,
+        })
+      );
+    const topRiskCustomers = [...customerRisks].sort((a, b) => a.riskScore - b.riskScore).slice(0, 6);
+    const highRiskCount = customerRisks.filter((r) => r.riskLabel === "High Risk").length;
 
-    // Cash flow projection: expected inflow from open/partial invoices, grouped by due month
-    const cashByMonth = new Map<string, number>();
-    for (const inv of invoices) {
-      if (inv.status === "paid") continue;
-      const out = outstanding(inv);
-      if (out <= 0) continue;
-      const k = monthKey(inv.due_date);
-      cashByMonth.set(k, (cashByMonth.get(k) ?? 0) + out);
+    const healthSegments: HealthSegment[] = [
+      { label: "Excellent", count: 0, outstanding: 0, colorClass: "text-success", barClass: "bg-success" },
+      { label: "Good", count: 0, outstanding: 0, colorClass: "text-info", barClass: "bg-info" },
+      { label: "Average", count: 0, outstanding: 0, colorClass: "text-warning", barClass: "bg-warning" },
+      { label: "High Risk", count: 0, outstanding: 0, colorClass: "text-danger", barClass: "bg-danger" },
+    ];
+    for (const r of customerRisks) {
+      const seg = healthSegments.find((s) => s.label === r.riskLabel)!;
+      seg.count += 1;
+      seg.outstanding += r.outstanding;
     }
-    const cashFlow = [...cashByMonth.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).slice(0, 6);
 
-    // Due date tracker: open/partial invoices due within next 30 days, soonest first
-    const in30 = new Date(t.getTime() + 30 * DAY);
-    const dueTracker = invoices
-      .filter((i) => i.status !== "paid" && new Date(i.due_date) <= in30)
-      .map((i) => ({ inv: i, out: outstanding(i), days: Math.floor((new Date(i.due_date).getTime() - t.getTime()) / DAY) }))
-      .sort((a, b) => a.days - b.days)
-      .slice(0, 8);
+    // ---- Top priority invoices (overdue, or due within 7 days) ----
+    const priorityRows: PriorityRow[] = invoices
+      .filter((i) => i.status !== "paid" && outstanding(i) > 0)
+      .map((i) => {
+        const overdueDays = Math.floor((t.getTime() - new Date(i.due_date).getTime()) / DAY);
+        return { inv: i, overdueDays, out: outstanding(i) };
+      })
+      .filter((r) => r.overdueDays >= -7)
+      .sort((a, b) => b.overdueDays - a.overdueDays)
+      .slice(0, 10)
+      .map(({ inv, overdueDays, out }) => {
+        const priority: Priority = overdueDays >= 30 ? "Critical" : overdueDays >= 1 ? "High" : overdueDays >= -3 ? "Medium" : "Low";
+        return {
+          invoiceId: inv.id,
+          invoiceNo: inv.invoice_no,
+          customerName: inv.customers?.name ?? "Unknown customer",
+          customerPhone: inv.customers?.phone ?? null,
+          outstanding: out,
+          dueDate: inv.due_date,
+          overdueDays,
+          priority,
+        };
+      });
 
-    // Top outstanding invoices
-    const topOutstanding = invoices
-      .filter((i) => outstanding(i) > 0)
-      .map((i) => ({ inv: i, out: outstanding(i) }))
-      .sort((a, b) => b.out - a.out)
-      .slice(0, 6);
+    // ---- Recent invoices ----
+    const recentInvoices: RecentInvoiceRow[] = [...invoices]
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .slice(0, 10)
+      .map((inv) => ({
+        id: inv.id,
+        invoiceNo: inv.invoice_no,
+        customerName: inv.customers?.name ?? "Unknown customer",
+        invoiceDate: inv.invoice_date,
+        dueDate: inv.due_date,
+        total: Number(inv.total),
+        paid: paidOf(inv),
+        outstanding: outstanding(inv),
+        effectiveStatus: effectiveStatus(inv),
+      }));
+
+    // ---- Smart insights (rule-based over the real numbers above) ----
+    const insights: DashboardInsight[] = [];
+    const prevMonth = collectionsSeries[collectionsSeries.length - 2];
+    const thisMonthSeries = collectionsSeries[collectionsSeries.length - 1];
+    if (prevMonth && prevMonth.invoiced > 0) {
+      const prevOutstandingIdx = outstandingTrend.length - 2;
+      const prevOutstanding = outstandingTrend[prevOutstandingIdx]?.value ?? 0;
+      const curOutstanding = outstandingTrend[outstandingTrend.length - 1]?.value ?? 0;
+      if (prevOutstanding > 0) {
+        const pct = Math.round(((curOutstanding - prevOutstanding) / prevOutstanding) * 100);
+        if (Math.abs(pct) >= 3) {
+          insights.push({
+            icon: pct > 0 ? "📈" : "📉",
+            severity: pct > 0 ? "warning" : "success",
+            title: "Outstanding Trend",
+            text: `Outstanding ${pct > 0 ? "increased" : "decreased"} by ${Math.abs(pct)}% vs last month.`,
+          });
+        }
+      }
+    }
+    if (prevMonth && prevMonth.collected > 0 && thisMonthSeries) {
+      const pct = Math.round(((thisMonthSeries.collected - prevMonth.collected) / prevMonth.collected) * 100);
+      if (Math.abs(pct) >= 5) {
+        insights.push({
+          icon: pct > 0 ? "💪" : "⚠️",
+          severity: pct > 0 ? "success" : "warning",
+          title: "Collections Trend",
+          text: `Collections ${pct > 0 ? "improved" : "declined"} by ${Math.abs(pct)}% vs last month.`,
+        });
+      }
+    }
+    const dueWithin3 = invoices.filter((i) => {
+      if (i.status === "paid" || outstanding(i) <= 0) return false;
+      const days = Math.floor((new Date(i.due_date).getTime() - t.getTime()) / DAY);
+      return days >= 0 && days <= 3;
+    }).length;
+    if (dueWithin3 > 0) {
+      insights.push({
+        icon: "🗓️",
+        severity: "info",
+        title: "Due Soon",
+        text: `${dueWithin3} invoice${dueWithin3 === 1 ? "" : "s"} become${dueWithin3 === 1 ? "s" : ""} due within 3 days.`,
+      });
+    }
+    const worstCredit = [...customerRisks].sort((a, b) => b.creditUtilizationPct - a.creditUtilizationPct)[0];
+    if (worstCredit && worstCredit.creditUtilizationPct >= 90) {
+      insights.push({
+        icon: "💳",
+        severity: "danger",
+        title: "Credit Limit Alert",
+        text: `${worstCredit.customer.name} has crossed ${Math.round(worstCredit.creditUtilizationPct)}% of their credit limit.`,
+      });
+    }
+    if (totalOutstanding > 0) {
+      const top5 = [...customerRisks].sort((a, b) => b.outstanding - a.outstanding).slice(0, 5);
+      const top5Sum = top5.reduce((s, r) => s + r.outstanding, 0);
+      const pct = Math.round((top5Sum / totalOutstanding) * 100);
+      if (pct >= 40) {
+        insights.push({
+          icon: "🎯",
+          severity: "info",
+          title: "Concentration Risk",
+          text: `Top 5 customers account for ${pct}% of total receivables.`,
+        });
+      }
+    }
+    const efficiencyTarget = 85;
+    insights.push({
+      icon: collectionEfficiency >= efficiencyTarget ? "🟢" : "🟠",
+      severity: collectionEfficiency >= efficiencyTarget ? "success" : "warning",
+      title: "Collection Efficiency",
+      text: `Collection efficiency is ${Math.round(collectionEfficiency)}%, ${
+        collectionEfficiency >= efficiencyTarget ? "above" : "below"
+      } the ${efficiencyTarget}% benchmark.`,
+    });
+    if (expectedThisWeek > 0) {
+      insights.push({
+        icon: "💰",
+        severity: "info",
+        title: "Cash Inflow Forecast",
+        text: `Expected cash inflow in the next 7 days: ${formatMoney(expectedThisWeek)}.`,
+      });
+    }
+
+    // ---- Activity feed ----
+    const customersById = new Map(customers.map((c) => [c.id, c]));
+    const activityEvents = buildActivityEvents({
+      receipts: receipts.map((r) => ({
+        receipt_date: r.receipt_date,
+        amount: Number(r.amount),
+        mode: r.mode,
+        customerName: customersById.get(r.customer_id)?.name ?? "Unknown customer",
+      })),
+      reminders: reminders.map((r) => ({ sent_at: r.sent_at, subject: r.subject, to_email: r.to_email, status: r.status })),
+      limit: 8,
+    });
+
+    // ---- Welcome summary ----
+    const attentionCount = priorityRows.filter((r) => r.priority === "Critical" || r.priority === "High" || r.overdueDays === 0).length;
 
     return {
       totalOutstanding,
       overdueAmount,
-      overdueCount,
-      invoicedThisMonth,
+      overdueCount: overdueInvoices.length,
       collectedThisMonth,
+      collectedToday,
+      expectedThisWeek,
+      expectedThisMonth,
+      invoicedThisMonth,
       dso,
       collectionEfficiency,
+      openInvoicesCount: openInvoices.length,
+      openInvoicesAmount,
+      highRiskCount,
+      pendingFollowups,
+      outstandingTrend,
+      collectionsSeries,
+      outstandingSparkline,
+      collectedSparkline,
+      invoicedSparkline,
       buckets,
-      revenueTrend,
-      cashFlow,
-      dueTracker,
-      topOutstanding,
-      activeCustomers: customers.length,
+      bucketCounts,
+      paidAmount,
+      openAmount,
+      topRiskCustomers,
+      healthSegments,
+      priorityRows,
+      recentInvoices,
+      insights,
+      activityEvents,
+      attentionCount,
+      activeCustomers: customerRisks.length,
       totalInvoices: invoices.length,
     };
-  }, [invoices, receipts, allocations, customers]);
+  }, [invoices, receipts, allocations, customers, reminders]);
 
   if (!isConfigured) {
     return (
@@ -176,240 +426,228 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <>
-        <PageHeader title="Dashboard" subtitle="Finance intelligence overview." />
-        <p className="text-sm text-ink-muted">Loading financial data…</p>
-      </>
+      <div className="space-y-6">
+        <div className="h-9 w-72 animate-pulse rounded-lg bg-black/[0.04]" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-xl bg-black/[0.04]" />
+          ))}
+        </div>
+        <div className="h-64 animate-pulse rounded-xl bg-black/[0.04]" />
+      </div>
     );
   }
 
-  const bucketTotal =
-    model.buckets.notDue + model.buckets.b0_30 + model.buckets.b31_60 + model.buckets.b61_90 + model.buckets.b90plus;
-  const maxCash = Math.max(1, ...model.cashFlow.map(([, v]) => v));
-  const maxRev = Math.max(1, ...model.revenueTrend.map(([, v]) => v));
+  const greeting = (() => {
+    const h = new Date().getHours();
+    return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  })();
+
+  const rangeSlice = <T,>(arr: T[]) => arr.slice(-rangeMonths);
 
   return (
-    <div className="mx-auto max-w-[1400px]">
+    <div className="mx-auto max-w-[1400px] pb-24">
       <PageHeader
         title="Finance Intelligence Dashboard"
-        subtitle="A live snapshot of receivables, cash health, and collection performance."
+        subtitle={lastUpdated ? `Last updated ${formatDateTime(lastUpdated.toISOString())}` : undefined}
+        action={
+          <button
+            onClick={load}
+            className="rounded-lg border border-hairline bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.03]"
+          >
+            ↻ Refresh
+          </button>
+        }
       />
 
       {error && (
         <p className="mb-4 rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>
       )}
 
-      {/* KPI row — neutral cards; accent reserved for the one figure that needs attention */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <Kpi label="Total Outstanding" value={inr(model.totalOutstanding)} />
-        <Kpi label="Overdue" value={inr(model.overdueAmount)} sub={`${model.overdueCount} invoices`} accent />
-        <Kpi label="Invoiced (MTD)" value={inr(model.invoicedThisMonth)} />
-        <Kpi label="Collected (MTD)" value={inr(model.collectedThisMonth)} />
-        <Kpi label="DSO" value={`${model.dso.toFixed(0)} days`} sub="Days Sales Outstanding" />
-        <Kpi label="Collection Efficiency" value={`${model.collectionEfficiency.toFixed(0)}%`} />
+      {/* Welcome */}
+      <div className="mb-6 rounded-xl border border-hairline bg-gradient-to-br from-brand-light/60 to-surface p-5 shadow-card">
+        <h2 className="text-xl font-semibold text-ink">{greeting} 👋</h2>
+        <p className="mt-1 text-[14px] text-ink-secondary">
+          You have <span className="font-semibold text-ink">{formatMoney(model.totalOutstanding)}</span> outstanding across{" "}
+          <span className="font-semibold text-ink">{model.openInvoicesCount + model.overdueCount}</span> invoices.{" "}
+          {model.attentionCount > 0 ? (
+            <span className="font-semibold text-danger">{model.attentionCount} invoice{model.attentionCount === 1 ? "" : "s"} need attention today.</span>
+          ) : (
+            <span className="font-semibold text-success">Nothing urgent needs attention today.</span>
+          )}
+        </p>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        {/* Cash flow projection */}
-        <Panel title="Cash Flow Projection" subtitle="Expected inflow from open invoices, by due month" className="lg:col-span-2">
-          {model.cashFlow.length === 0 ? (
-            <Empty />
-          ) : (
-            <div className="flex h-40 items-end gap-4">
-              {model.cashFlow.map(([k, v]) => (
-                <div key={k} className="flex flex-1 flex-col items-center gap-2">
-                  <span className="text-xs font-medium text-ink-secondary">{inr(v)}</span>
-                  <div
-                    className="w-full rounded-t-md bg-brand transition-all duration-300"
-                    style={{ height: `${Math.max(6, (v / maxCash) * 100)}px` }}
-                  />
-                  <span className="text-xs text-ink-muted">{monthLabel(k)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Panel>
-
-        {/* Working capital indicators */}
-        <Panel title="Working Capital Indicators" subtitle="Derived from receivables only">
-          <div className="space-y-4">
-            <Metric label="Days Sales Outstanding (DSO)" value={`${model.dso.toFixed(1)} days`} />
-            <Metric label="Collection Efficiency (MTD)" value={`${model.collectionEfficiency.toFixed(0)}%`} />
-            <Metric label="Outstanding / Active Customer" value={inr(model.activeCustomers ? model.totalOutstanding / model.activeCustomers : 0)} />
-            <p className="pt-2 text-xs text-ink-muted">
-              DPO and full working-capital (current assets vs. liabilities) need payables and GL
-              posting data not yet in the backend — see below.
-            </p>
-          </div>
-        </Panel>
+      {/* KPI row */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <StatCard
+          icon="💰"
+          label="Total Outstanding"
+          value={formatMoney(model.totalOutstanding)}
+          accent="blue"
+          sparkline={model.outstandingSparkline}
+          insight={`${model.openInvoicesCount + model.overdueCount} invoices`}
+        />
+        <StatCard
+          icon="⚠️"
+          label="Overdue Amount"
+          value={formatMoney(model.overdueAmount)}
+          accent="red"
+          insight={`${model.overdueCount} invoices`}
+        />
+        <StatCard
+          icon="💵"
+          label="Collected This Month"
+          value={formatMoney(model.collectedThisMonth)}
+          accent="green"
+          sparkline={model.collectedSparkline}
+          insight={`vs ${formatMoney(model.invoicedThisMonth)} invoiced`}
+        />
+        <StatCard
+          icon="🎯"
+          label="Collection Efficiency"
+          value={`${Math.round(model.collectionEfficiency)}%`}
+          accent={model.collectionEfficiency >= 85 ? "green" : "orange"}
+          insight="Collected ÷ invoiced, month to date"
+        />
+        <StatCard
+          icon="⏱️"
+          label="Avg. Collection Period"
+          value={`${model.dso.toFixed(0)} days`}
+          accent="purple"
+          insight="Trailing 90-day sales basis"
+        />
+        <StatCard
+          icon="📂"
+          label="Open Invoices"
+          value={String(model.openInvoicesCount)}
+          accent="blue"
+          insight={formatMoney(model.openInvoicesAmount)}
+        />
+        <StatCard
+          icon="🚩"
+          label="High Risk Customers"
+          value={String(model.highRiskCount)}
+          accent="red"
+          insight={`of ${model.activeCustomers} active`}
+        />
+        <StatCard
+          icon="📨"
+          label="Pending Follow-ups"
+          value={String(model.pendingFollowups)}
+          accent="orange"
+          insight="Overdue, no reminder in 7 days"
+        />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        {/* AR Ageing */}
-        <Panel title="AR Ageing" subtitle="Outstanding by days overdue" className="lg:col-span-2">
-          {bucketTotal === 0 ? (
-            <Empty />
-          ) : (
-            <div className="space-y-3">
-              {[
-                { label: "Not due", value: model.buckets.notDue, color: "bg-info" },
-                { label: "0–30 days", value: model.buckets.b0_30, color: "bg-warning/50" },
-                { label: "31–60 days", value: model.buckets.b31_60, color: "bg-warning" },
-                { label: "61–90 days", value: model.buckets.b61_90, color: "bg-danger/60" },
-                { label: "90+ days", value: model.buckets.b90plus, color: "bg-danger" },
-              ].map((b) => (
-                <div key={b.label} className="flex items-center gap-3">
-                  <span className="w-24 flex-none text-xs font-medium text-ink-muted">{b.label}</span>
-                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-black/[0.04]">
-                    <div
-                      className={`h-full transition-all duration-300 ${b.color}`}
-                      style={{ width: `${bucketTotal ? (b.value / bucketTotal) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <span className="w-28 flex-none text-right text-xs font-semibold tabular-nums text-ink-secondary">
-                    {inr(b.value)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Panel>
-
-        {/* Revenue trend */}
-        <Panel title="Revenue Trend" subtitle="Invoiced, last 6 months">
-          {model.revenueTrend.length === 0 ? (
-            <Empty />
-          ) : (
-            <div className="flex h-32 items-end gap-2">
-              {model.revenueTrend.map(([k, v]) => (
-                <div key={k} className="flex flex-1 flex-col items-center gap-1">
-                  <div
-                    className="w-full rounded-t-md bg-ink/70 transition-all duration-300"
-                    style={{ height: `${Math.max(4, (v / maxRev) * 90)}px` }}
-                  />
-                  <span className="text-[10px] text-ink-muted">{monthLabel(k)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Panel>
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        {/* Due date tracker */}
-        <Panel title="Due Date Tracker" subtitle="Open invoices due within 30 days">
-          {model.dueTracker.length === 0 ? (
-            <Empty />
-          ) : (
-            <ul className="divide-y divide-hairline">
-              {model.dueTracker.map(({ inv, out, days }) => (
-                <li key={inv.id} className="flex items-center justify-between py-2 text-sm">
-                  <div>
-                    <p className="font-medium text-ink">{inv.invoice_no}</p>
-                    <p className="text-xs text-ink-muted">{inv.customers?.name ?? "—"}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold tabular-nums text-ink">{inr(out)}</p>
-                    <p className={`text-xs ${days < 0 ? "text-danger" : "text-ink-muted"}`}>
-                      {days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? "Due today" : `Due in ${days}d`}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-
-        {/* Outstanding invoices */}
-        <Panel title="Largest Outstanding Invoices" subtitle="Top exposure, current">
-          {model.topOutstanding.length === 0 ? (
-            <Empty />
-          ) : (
-            <ul className="divide-y divide-hairline">
-              {model.topOutstanding.map(({ inv, out }) => (
-                <li key={inv.id} className="flex items-center justify-between py-2 text-sm">
-                  <div>
-                    <p className="font-medium text-ink">{inv.invoice_no}</p>
-                    <p className="text-xs text-ink-muted">{inv.customers?.name ?? "—"}</p>
-                  </div>
-                  <p className="font-semibold tabular-nums text-ink">{inr(out)}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-      </div>
-
-      {/* Not available */}
-      <Panel
-        title="Awaiting Data"
-        subtitle="These modules need tables this backend doesn't have yet (AP/vendor, GST, TDS, GL postings, bank feed) — nothing is faked here"
-        className="mt-6"
-      >
-        <div className="flex flex-wrap gap-2">
-          {NOT_AVAILABLE.map((label) => (
-            <span
-              key={label}
-              className="rounded-full border border-hairline bg-section px-3 py-1 text-xs font-medium text-ink-muted"
+      {/* Analytics */}
+      <div className="mb-3 mt-8 flex items-center justify-between">
+        <h2 className="text-[22px] font-semibold text-ink">Analytics</h2>
+        <div className="flex gap-1 rounded-lg border border-hairline bg-section p-0.5">
+          {RANGE_OPTIONS.map((opt) => (
+            <button
+              key={opt.months}
+              onClick={() => setRangeMonths(opt.months)}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 ${
+                rangeMonths === opt.months ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink-secondary"
+              }`}
             >
-              {label}
-            </span>
+              {opt.label}
+            </button>
           ))}
         </div>
-      </Panel>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
+          <h3 className="text-lg font-semibold text-ink">Outstanding Trend</h3>
+          <p className="text-[13px] text-ink-muted">Running receivable balance, month-end</p>
+          <div className="mt-4">
+            <OutstandingTrendChart points={rangeSlice(model.outstandingTrend)} />
+          </div>
+        </div>
+        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
+          <h3 className="text-lg font-semibold text-ink">Collections vs Invoiced</h3>
+          <p className="text-[13px] text-ink-muted">Real amounts raised vs collected, per month</p>
+          <div className="mt-4">
+            <CollectionsChart points={rangeSlice(model.collectionsSeries)} />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
+          <h3 className="text-lg font-semibold text-ink">Invoice Ageing</h3>
+          <p className="text-[13px] text-ink-muted">Outstanding value by days overdue</p>
+          <div className="mt-4">
+            <AgeingChart
+              buckets={[
+                { label: "Not due", value: model.buckets.notDue, colorClass: "bg-info" },
+                { label: "0–30 days", value: model.buckets.b0_30, colorClass: "bg-warning/50" },
+                { label: "31–60 days", value: model.buckets.b31_60, colorClass: "bg-warning" },
+                { label: "61–90 days", value: model.buckets.b61_90, colorClass: "bg-danger/60" },
+                { label: "90+ days", value: model.buckets.b90plus, colorClass: "bg-danger" },
+              ]}
+            />
+          </div>
+        </div>
+        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
+          <h3 className="text-lg font-semibold text-ink">Receivable Distribution</h3>
+          <p className="text-[13px] text-ink-muted">By invoice value</p>
+          <div className="mt-4">
+            <DistributionDonut
+              centerLabel={`₹${(model.paidAmount + model.openAmount + model.overdueAmount).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
+              segments={[
+                { label: "Paid", value: model.paidAmount, color: "#059669", colorClass: "bg-success" },
+                { label: "Open", value: model.openAmount, color: "#4F46E5", colorClass: "bg-info" },
+                { label: "Overdue", value: model.overdueAmount, color: "#DC2626", colorClass: "bg-danger" },
+              ]}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Ageing summary tiles */}
+      <div className="mt-6">
+        <AgeingSummaryCards
+          items={[
+            { label: "Not Due", count: model.bucketCounts.notDue, amount: model.buckets.notDue, colorClass: "bg-info" },
+            { label: "0–30 Days", count: model.bucketCounts.b0_30, amount: model.buckets.b0_30, colorClass: "bg-warning/50" },
+            { label: "31–60 Days", count: model.bucketCounts.b31_60, amount: model.buckets.b31_60, colorClass: "bg-warning" },
+            { label: "61–90 Days", count: model.bucketCounts.b61_90, amount: model.buckets.b61_90, colorClass: "bg-danger/60" },
+            { label: "90+ Days", count: model.bucketCounts.b90plus, amount: model.buckets.b90plus, colorClass: "bg-danger" },
+          ]}
+        />
+      </div>
+
+      {/* Main grid: left (primary) + right (secondary) */}
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[7fr_3fr]">
+        <div className="space-y-6">
+          <OutstandingOverviewCard
+            outstanding={model.totalOutstanding}
+            collectedToday={model.collectedToday}
+            expectedThisWeek={model.expectedThisWeek}
+            expectedThisMonth={model.expectedThisMonth}
+            collectedMTD={model.collectedThisMonth}
+            invoicedMTD={model.invoicedThisMonth}
+          />
+          <PriorityInvoicesCard rows={model.priorityRows} />
+          <RecentInvoicesCard rows={model.recentInvoices} />
+        </div>
+
+        <div className="space-y-6">
+          <CustomerRiskCard rows={model.topRiskCustomers} />
+          <SmartInsightsCard insights={model.insights} />
+          <ActivityFeedCard events={model.activityEvents} />
+        </div>
+      </div>
+
+      {/* Customer health */}
+      <div className="mt-6">
+        <CustomerHealthCard segments={model.healthSegments} />
+      </div>
+
+      <QuickActionsFab />
     </div>
   );
-}
-
-function Kpi({
-  label,
-  value,
-  sub,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-hairline bg-surface p-4 shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className={`mt-2 text-xl font-semibold tabular-nums tracking-tight ${accent ? "text-danger" : "text-ink"}`}>{value}</p>
-      {sub && <p className="mt-1 text-xs text-ink-muted">{sub}</p>}
-    </div>
-  );
-}
-
-function Panel({
-  title,
-  subtitle,
-  children,
-  className = "",
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`rounded-xl border border-hairline bg-surface p-5 shadow-card ${className}`}>
-      <h3 className="text-sm font-semibold text-ink">{title}</h3>
-      {subtitle && <p className="mt-0.5 text-xs text-ink-muted">{subtitle}</p>}
-      <div className="mt-4">{children}</div>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-ink-muted">{label}</span>
-      <span className="text-sm font-semibold tabular-nums text-ink">{value}</span>
-    </div>
-  );
-}
-
-function Empty() {
-  return <p className="text-sm text-ink-muted">No data yet.</p>;
 }

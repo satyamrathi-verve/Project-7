@@ -5,11 +5,11 @@ import { useCountUp } from "@/lib/useCountUp";
 type Accent = "blue" | "green" | "orange" | "red" | "purple";
 
 const ACCENT_STYLES: Record<Accent, { ring: string; icon: string; trendUp: string; trendDown: string; hoverBorder: string }> = {
-  blue: { ring: "bg-blue-50 text-blue-600", icon: "bg-blue-100", trendUp: "text-blue-600", trendDown: "text-red-600", hoverBorder: "hover:border-blue-300" },
-  green: { ring: "bg-emerald-50 text-emerald-600", icon: "bg-emerald-100", trendUp: "text-emerald-600", trendDown: "text-red-600", hoverBorder: "hover:border-emerald-300" },
-  orange: { ring: "bg-amber-50 text-amber-600", icon: "bg-amber-100", trendUp: "text-emerald-600", trendDown: "text-red-600", hoverBorder: "hover:border-amber-300" },
-  red: { ring: "bg-red-50 text-red-600", icon: "bg-red-100", trendUp: "text-emerald-600", trendDown: "text-red-600", hoverBorder: "hover:border-red-300" },
-  purple: { ring: "bg-violet-50 text-violet-600", icon: "bg-violet-100", trendUp: "text-emerald-600", trendDown: "text-red-600", hoverBorder: "hover:border-violet-300" },
+  blue: { ring: "bg-info/10 text-info", icon: "bg-info/10", trendUp: "text-info", trendDown: "text-danger", hoverBorder: "hover:border-info/40" },
+  green: { ring: "bg-success/10 text-success", icon: "bg-success/10", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-success/40" },
+  orange: { ring: "bg-warning/10 text-warning", icon: "bg-warning/10", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-warning/40" },
+  red: { ring: "bg-danger/10 text-danger", icon: "bg-danger/10", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-danger/40" },
+  purple: { ring: "bg-violet-50 text-violet-600", icon: "bg-violet-100", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-violet-300" },
 };
 
 /** Tiny inline sparkline — no charting dependency, just an SVG polyline. */
@@ -60,7 +60,7 @@ export function StatCard({
   const displayValue = countTo !== undefined && formatValue ? formatValue(animated) : value;
   return (
     <div
-      className={`group rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_10px_30px_rgba(0,0,0,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_10px_30px_rgba(0,0,0,0.06)] ${styles.hoverBorder}`}
+      className={`group rounded-xl border border-hairline bg-surface p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover ${styles.hoverBorder}`}
     >
       <div className="flex items-start justify-between">
         <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${styles.icon}`}>{icon}</div>
@@ -70,9 +70,9 @@ export function StatCard({
           </span>
         )}
       </div>
-      <p className="mt-4 text-2xl font-bold tracking-tight text-slate-900 tabular-nums">{displayValue}</p>
-      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      {insight && <p className="mt-1 text-[12px] text-slate-400">{insight}</p>}
+      <p className="mt-4 text-2xl font-bold tracking-tight text-ink tabular-nums">{displayValue}</p>
+      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
+      {insight && <p className="mt-1 text-[12px] text-ink-muted/80">{insight}</p>}
       {sparkline && (
         <div className="mt-3">
           <Sparkline points={sparkline} accent={accent} />
