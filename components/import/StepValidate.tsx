@@ -8,18 +8,18 @@ import { categorizeRow } from "@/lib/import/validate";
 type Filter = "all" | RowCategory;
 
 const STATUS_DOT: Record<RowStatus, string> = {
-  valid: "bg-emerald-500",
-  warning: "bg-amber-500",
-  error: "bg-red-500",
+  valid: "bg-success",
+  warning: "bg-warning",
+  error: "bg-danger",
 };
 
 const CARD_DEFS: { key: Filter; label: string; tone: string; ring: string }[] = [
-  { key: "all", label: "Total", tone: "text-slate-800", ring: "ring-slate-400" },
-  { key: "valid", label: "Valid", tone: "text-emerald-600", ring: "ring-emerald-400" },
+  { key: "all", label: "Total", tone: "text-ink", ring: "ring-ink-muted" },
+  { key: "valid", label: "Valid", tone: "text-success", ring: "ring-success-border" },
   { key: "duplicate", label: "Duplicate", tone: "text-purple-600", ring: "ring-purple-400" },
-  { key: "missing", label: "Missing Data", tone: "text-red-600", ring: "ring-red-400" },
-  { key: "invalid", label: "Invalid Data", tone: "text-amber-600", ring: "ring-amber-400" },
-  { key: "excluded", label: "Excluded", tone: "text-slate-400", ring: "ring-slate-300" },
+  { key: "missing", label: "Missing Data", tone: "text-danger", ring: "ring-danger-border" },
+  { key: "invalid", label: "Invalid Data", tone: "text-warning", ring: "ring-warning-border" },
+  { key: "excluded", label: "Excluded", tone: "text-ink-muted", ring: "ring-ink-muted/60" },
 ];
 
 export function StepValidate({
@@ -94,11 +94,11 @@ export function StepValidate({
     const row = filtered[index];
     const fieldLabel = (key: string) => entity.fields.find((f) => f.key === key)?.label ?? key;
     return (
-      <div style={style} className="flex items-center border-b border-slate-100 px-2 text-xs">
+      <div style={style} className="flex items-center border-b border-hairline/50 px-2 text-xs">
         <div className="grid w-full items-center gap-0" style={{ gridTemplateColumns: gridTemplate }}>
           <input type="checkbox" checked={selected.has(row.rowIndex)} onChange={() => toggleSelected(row.rowIndex)} />
           <span className={`h-2.5 w-2.5 rounded-full ${STATUS_DOT[row.status]}`} title={row.status} />
-          <span className="text-slate-400">#{row.rowIndex + 1}</span>
+          <span className="text-ink-muted">#{row.rowIndex + 1}</span>
           {entity.fields.map((f) => {
             const issue = row.issues.find((i) => i.field === f.key);
             return (
@@ -111,10 +111,10 @@ export function StepValidate({
                   title={issue?.message}
                   className={`w-full rounded border px-1.5 py-1 text-xs outline-none focus:border-brand ${
                     issue?.level === "error"
-                      ? "border-red-300 bg-red-50"
+                      ? "border-danger-border bg-danger-bg"
                       : issue?.level === "warning"
-                      ? "border-amber-300 bg-amber-50"
-                      : "border-transparent bg-transparent hover:border-slate-200"
+                      ? "border-warning-border bg-warning-bg"
+                      : "border-transparent bg-transparent hover:border-hairline"
                   }`}
                 />
               </div>
@@ -122,19 +122,19 @@ export function StepValidate({
           })}
           <div className="flex flex-col justify-center gap-0.5 py-1 pl-2">
             {row.issues.length === 0 ? (
-              <span className="text-slate-300">—</span>
+              <span className="text-ink-muted/60">—</span>
             ) : (
               row.issues.slice(0, 2).map((issue, i) => (
                 <p
                   key={i}
                   title={issue.message}
-                  className={`truncate text-[11px] leading-tight ${issue.level === "error" ? "text-red-600" : "text-amber-700"}`}
+                  className={`truncate text-[11px] leading-tight ${issue.level === "error" ? "text-danger" : "text-warning"}`}
                 >
                   <span className="font-semibold">{fieldLabel(issue.field)}:</span> {issue.message}
                 </p>
               ))
             )}
-            {row.issues.length > 2 && <p className="text-[10px] text-slate-400">+{row.issues.length - 2} more</p>}
+            {row.issues.length > 2 && <p className="text-[10px] text-ink-muted">+{row.issues.length - 2} more</p>}
           </div>
         </div>
       </div>
@@ -153,10 +153,10 @@ export function StepValidate({
               onClick={() => setFilter(c.key)}
               aria-pressed={active}
               className={`rounded-xl border p-4 text-left transition-all ${
-                active ? `border-transparent bg-white ring-2 ${c.ring}` : "border-slate-200 bg-white hover:border-slate-300"
+                active ? `border-transparent bg-surface ring-2 ${c.ring}` : "border-hairline bg-surface hover:border-ink-muted/40"
               }`}
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{c.label}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{c.label}</p>
               <p className={`mt-1 text-2xl font-bold ${c.tone}`}>{counts[c.key].toLocaleString()}</p>
             </button>
           );
@@ -169,7 +169,7 @@ export function StepValidate({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search rows…"
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-brand"
+            className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs outline-none focus:border-brand"
           />
           {filter !== "all" && (
             <button type="button" onClick={() => setFilter("all")} className="rounded-full bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-900">
@@ -177,7 +177,7 @@ export function StepValidate({
             </button>
           )}
         </div>
-        <button type="button" onClick={onRevalidate} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+        <button type="button" onClick={onRevalidate} className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section">
           Revalidate all
         </button>
       </div>
@@ -187,7 +187,7 @@ export function StepValidate({
           <span>{selected.size} row(s) selected</span>
           <button
             type="button"
-            className="rounded bg-white/15 px-3 py-1 text-xs font-medium hover:bg-white/25"
+            className="rounded bg-surface/15 px-3 py-1 text-xs font-medium hover:bg-surface/25"
             onClick={() => {
               onSetExcluded([...selected], true);
               setSelected(new Set());
@@ -197,7 +197,7 @@ export function StepValidate({
           </button>
           <button
             type="button"
-            className="rounded bg-white/15 px-3 py-1 text-xs font-medium hover:bg-white/25"
+            className="rounded bg-surface/15 px-3 py-1 text-xs font-medium hover:bg-surface/25"
             onClick={() => {
               onSetExcluded([...selected], false);
               setSelected(new Set());
@@ -211,13 +211,13 @@ export function StepValidate({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
         {/* Single scroll container for BOTH the header and the virtualized rows below,
             so dragging the horizontal scrollbar anywhere moves them together. */}
         <div className="overflow-x-auto">
           <div style={{ width: totalWidth }}>
-            <div className="border-b border-slate-200 bg-slate-50 px-2 py-2">
-              <div className="grid items-center gap-0 text-xs font-semibold text-slate-600" style={{ gridTemplateColumns: gridTemplate }}>
+            <div className="border-b border-hairline bg-section px-2 py-2">
+              <div className="grid items-center gap-0 text-xs font-semibold text-ink-secondary" style={{ gridTemplateColumns: gridTemplate }}>
                 <span />
                 <span>Status</span>
                 <span>Row</span>
@@ -231,7 +231,7 @@ export function StepValidate({
               </div>
             </div>
             {filtered.length === 0 ? (
-              <p className="px-4 py-10 text-center text-sm text-slate-400">No rows match this filter.</p>
+              <p className="px-4 py-10 text-center text-sm text-ink-muted">No rows match this filter.</p>
             ) : (
               <FixedSizeList
                 height={480}
@@ -247,19 +247,19 @@ export function StepValidate({
         </div>
       </div>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-ink-muted">
         Showing {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} rows
         {filter !== "all" && <> — filtered to <strong>{CARD_DEFS.find((c) => c.key === filter)?.label}</strong></>}
         {search && <> matching “{search}”</>}. Edits save on blur — fix a highlighted cell and its message in the Issues column updates instantly.
       </p>
 
       <div className="flex items-center justify-between">
-        <button type="button" onClick={onBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100">
+        <button type="button" onClick={onBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-ink-secondary hover:bg-section">
           Back
         </button>
         <div className="flex items-center gap-3">
           {blockingErrors > 0 && (
-            <span className="text-xs text-red-600">{blockingErrors} row(s) still have errors — they'll be skipped unless fixed.</span>
+            <span className="text-xs text-danger">{blockingErrors} row(s) still have errors — they'll be skipped unless fixed.</span>
           )}
           <button type="button" onClick={onNext} className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark">
             Continue to import configuration

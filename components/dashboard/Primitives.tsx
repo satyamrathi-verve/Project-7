@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-shimmer rounded-xl bg-[linear-gradient(110deg,rgba(0,0,0,0.04)_8%,rgba(0,0,0,0.08)_18%,rgba(0,0,0,0.04)_33%)] bg-[length:200%_100%] ${className}`}
+      className={`animate-shimmer rounded-xl bg-[linear-gradient(110deg,rgb(var(--color-ink)/0.04)_8%,rgb(var(--color-ink)/0.09)_18%,rgb(var(--color-ink)/0.04)_33%)] bg-[length:200%_100%] ${className}`}
     />
   );
 }
@@ -31,13 +31,13 @@ export function GradientProgressBar({
   const clamped = Math.max(0, Math.min(100, percent));
   const gradient: Record<string, string> = {
     brand: "from-[#8ba0d6] to-brand",
-    success: "from-emerald-300 to-success",
-    warning: "from-amber-300 to-warning",
-    danger: "from-red-300 to-danger",
+    success: "from-success to-success",
+    warning: "from-warning to-warning",
+    danger: "from-danger to-danger",
   };
   return (
     <div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-black/[0.05] shadow-inner">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-ink/[0.06] shadow-inner">
         <div
           className={`h-full rounded-full bg-gradient-to-r transition-[width] duration-700 ease-premium ${gradient[tone]}`}
           style={{ width: `${clamped}%` }}

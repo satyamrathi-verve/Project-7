@@ -73,13 +73,13 @@ const EMPTY_FORM: FormState = {
 
 const AVATAR_GRADIENTS = [
   "from-pink-400 to-rose-500",
-  "from-amber-400 to-orange-500",
-  "from-emerald-400 to-teal-500",
-  "from-sky-400 to-blue-500",
+  "from-warning to-warning",
+  "from-success to-teal-500",
+  "from-sky-400 to-info",
   "from-violet-400 to-purple-500",
   "from-fuchsia-400 to-pink-500",
   "from-cyan-400 to-sky-500",
-  "from-lime-400 to-emerald-500",
+  "from-lime-400 to-success",
 ];
 
 function initials(name: string) {
@@ -280,7 +280,7 @@ export default function CustomerMasterPage() {
         <div className="relative flex justify-end">
           <button
             onClick={() => setOpenMenuId(openMenuId === c.id ? null : c.id)}
-            className="rounded-lg p-1.5 text-ink-muted transition-colors duration-150 hover:bg-black/[0.04] hover:text-ink-secondary"
+            className="rounded-lg p-1.5 text-ink-muted transition-colors duration-150 hover:bg-ink/[0.04] hover:text-ink-secondary"
             aria-label="Row actions"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -296,7 +296,7 @@ export default function CustomerMasterPage() {
                     selectCustomer(c);
                     setOpenMenuId(null);
                   }}
-                  className="block w-full px-3 py-2 text-left text-sm text-ink-secondary hover:bg-black/[0.03]"
+                  className="block w-full px-3 py-2 text-left text-sm text-ink-secondary hover:bg-ink/[0.03]"
                 >
                   View Sales
                 </button>
@@ -305,7 +305,7 @@ export default function CustomerMasterPage() {
                     openEdit(c);
                     setOpenMenuId(null);
                   }}
-                  className="block w-full px-3 py-2 text-left text-sm text-ink-secondary hover:bg-black/[0.03]"
+                  className="block w-full px-3 py-2 text-left text-sm text-ink-secondary hover:bg-ink/[0.03]"
                 >
                   Edit
                 </button>
@@ -340,14 +340,14 @@ export default function CustomerMasterPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/upload"
-              className="rounded-lg border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.03]"
+              className="rounded-lg border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-ink/[0.03]"
             >
               Import
             </Link>
             <button
               onClick={() => exportCustomersCsv(filteredCustomers)}
               disabled={customers.length === 0}
-              className="rounded-lg border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-ink/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Export
             </button>
@@ -543,7 +543,7 @@ export default function CustomerMasterPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setShowForm(false)}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.04]"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-ink/[0.04]"
               >
                 Cancel
               </button>

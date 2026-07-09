@@ -135,12 +135,12 @@ export default function InvoiceViewPage() {
 
   if (error || !data) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
+      <div className="rounded-2xl border border-danger-border bg-danger-bg p-6 text-danger">
         <p className="font-semibold">Couldn&apos;t load this invoice.</p>
         <p className="mt-1 text-sm">{error}</p>
         <button
           onClick={() => router.push("/invoices")}
-          className="mt-4 rounded-[10px] bg-white px-3 py-1.5 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200 transition-colors duration-200 hover:bg-red-100"
+          className="mt-4 rounded-[10px] bg-surface px-3 py-1.5 text-sm font-medium text-danger ring-1 ring-inset ring-danger-border transition-colors duration-200 hover:bg-danger-bg"
         >
           Back to invoices
         </button>

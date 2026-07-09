@@ -36,7 +36,8 @@ export function DataTable<T extends { id: string }>({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-10 text-center text-ink-muted">
+              <td colSpan={columns.length} className="animate-fade-in px-4 py-14 text-center text-ink-muted">
+                <div className="mb-2 text-2xl opacity-70">📭</div>
                 {empty}
               </td>
             </tr>
@@ -44,8 +45,8 @@ export function DataTable<T extends { id: string }>({
             rows.map((row, i) => (
               <tr
                 key={row.id}
-                className={`border-b border-hairline/70 transition-colors duration-150 last:border-0 hover:bg-info/[0.035] ${
-                  i % 2 === 1 ? "bg-black/[0.008]" : ""
+                className={`border-b border-hairline/70 transition-colors duration-150 last:border-0 hover:bg-info/[0.06] ${
+                  i % 2 === 1 ? "bg-ink/[0.015]" : ""
                 }`}
               >
                 {columns.map((c) => (

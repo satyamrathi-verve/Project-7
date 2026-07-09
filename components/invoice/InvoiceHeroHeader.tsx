@@ -40,7 +40,7 @@ export function InvoiceHeroHeader({
         : `Due in ${dueInDays} day${dueInDays === 1 ? "" : "s"}`;
 
   return (
-    <div className="relative mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50/50 via-white to-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_10px_30px_rgba(0,0,0,0.05)] sm:p-8">
+    <div className="relative mb-8 overflow-hidden rounded-2xl border border-hairline bg-gradient-to-br from-info-bg/50 via-white to-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_10px_30px_rgba(0,0,0,0.05)] sm:p-8">
       {/* Soft radial glow behind the invoice title — subtle, not distracting */}
       <div
         aria-hidden
@@ -49,7 +49,7 @@ export function InvoiceHeroHeader({
 
       <button
         onClick={() => router.push("/invoices")}
-        className="relative z-10 mb-5 flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-slate-800"
+        className="relative z-10 mb-5 flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors duration-200 hover:text-ink"
       >
         <span aria-hidden>←</span>
         Back to invoices
@@ -59,11 +59,11 @@ export function InvoiceHeroHeader({
         {/* Left: identity + meta */}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[34px] font-bold leading-tight tracking-tight text-slate-900">{invoice.invoice_no}</h1>
+            <h1 className="text-[34px] font-bold leading-tight tracking-tight text-ink">{invoice.invoice_no}</h1>
             <StatusBadge status={invoice.status} />
           </div>
-          <p className="mt-1.5 text-[15px] text-slate-500">
-            Billed to <span className="font-medium text-slate-700">{customer.name}</span>
+          <p className="mt-1.5 text-[15px] text-ink-muted">
+            Billed to <span className="font-medium text-ink-secondary">{customer.name}</span>
           </p>
 
           <dl className="mt-6 grid grid-cols-2 gap-x-10 gap-y-4 sm:grid-cols-4">
@@ -75,17 +75,17 @@ export function InvoiceHeroHeader({
         </div>
 
         {/* Right: hero outstanding metric — slightly elevated above the header surface */}
-        <div className="flex-none rounded-xl border border-slate-100 bg-white px-6 py-5 text-left shadow-[0_2px_8px_rgba(15,23,42,0.06),0_10px_24px_rgba(15,23,42,0.04)] lg:text-right">
-          <p className="text-[12px] font-medium uppercase tracking-wide text-slate-400">Outstanding</p>
+        <div className="flex-none rounded-xl border border-hairline/50 bg-surface px-6 py-5 text-left shadow-[0_2px_8px_rgba(15,23,42,0.06),0_10px_24px_rgba(15,23,42,0.04)] lg:text-right">
+          <p className="text-[12px] font-medium uppercase tracking-wide text-ink-muted">Outstanding</p>
           <p className={`mt-1 text-[40px] font-bold leading-none tabular-nums ${STATUS_ACCENT_TEXT[invoice.status]}`}>
             {`₹${outstanding.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
           </p>
-          <p className={`mt-2 text-sm font-medium ${isOverdue ? "text-red-600" : "text-slate-500"}`}>{dueNote}</p>
+          <p className={`mt-2 text-sm font-medium ${isOverdue ? "text-danger" : "text-ink-muted"}`}>{dueNote}</p>
         </div>
       </div>
 
       {/* Premium divider */}
-      <div className="relative z-10 mt-7 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+      <div className="relative z-10 mt-7 h-px bg-gradient-to-r from-transparent via-hairline to-transparent" />
 
       {/* Action bar */}
       <div className="relative z-10 flex flex-wrap items-center gap-2 pt-5">
@@ -108,7 +108,7 @@ export function InvoiceHeroHeader({
           <Link
             href={`/invoices/${invoice.id}/print`}
             target="_blank"
-            className="rounded-[10px] border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+            className="rounded-[10px] border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary transition-all duration-200 hover:-translate-y-0.5 hover:border-ink-muted/40 hover:bg-section"
             title="Opens the printable A4 view — use your browser's Print → Save as PDF"
           >
             <Icon className="mr-1">⬇️</Icon>
@@ -121,7 +121,7 @@ export function InvoiceHeroHeader({
               aria-haspopup="menu"
               aria-expanded={moreOpen}
               aria-label="More actions"
-              className="rounded-[10px] border border-slate-200 bg-white p-2 text-slate-500 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="rounded-[10px] border border-hairline bg-surface p-2 text-ink-muted transition-all duration-200 hover:-translate-y-0.5 hover:border-ink-muted/40 hover:bg-section hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               ⋯
             </button>
@@ -136,13 +136,13 @@ export function InvoiceHeroHeader({
                 />
                 <div
                   role="menu"
-                  className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+                  className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-hairline bg-surface py-1 shadow-lg"
                 >
                   <Link
                     href={`/invoices/${invoice.id}/print`}
                     target="_blank"
                     role="menuitem"
-                    className="block px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    className="block px-3.5 py-2 text-sm text-ink-secondary hover:bg-section"
                   >
                     🖨️ Print
                   </Link>
@@ -150,7 +150,7 @@ export function InvoiceHeroHeader({
                     href={`/invoices/${invoice.id}/edit`}
                     role="menuitem"
                     onClick={() => setMoreOpen(false)}
-                    className="block px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    className="block px-3.5 py-2 text-sm text-ink-secondary hover:bg-section"
                   >
                     ✏️ Edit Invoice
                   </Link>
@@ -169,11 +169,11 @@ export function InvoiceHeroHeader({
 function MetaField({ icon, label, value, muted = false }: { icon: string; label: string; value: string; muted?: boolean }) {
   return (
     <div>
-      <dt className="flex items-center gap-1.5 text-[12px] uppercase tracking-wide text-slate-400">
+      <dt className="flex items-center gap-1.5 text-[12px] uppercase tracking-wide text-ink-muted">
         <Icon>{icon}</Icon>
         {label}
       </dt>
-      <dd className={`mt-1 text-[15px] font-semibold ${muted ? "text-slate-400" : "text-slate-800"}`}>{value}</dd>
+      <dd className={`mt-1 text-[15px] font-semibold ${muted ? "text-ink-muted" : "text-ink"}`}>{value}</dd>
     </div>
   );
 }

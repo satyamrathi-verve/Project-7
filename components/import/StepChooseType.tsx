@@ -26,11 +26,11 @@ export function StepChooseType({
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-slate-700">What are you importing?</h3>
+          <h3 className="mb-3 text-sm font-semibold text-ink-secondary">What are you importing?</h3>
         </div>
         <Link
           href="/upload/history"
-          className="flex flex-none items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+          className="flex flex-none items-center gap-1.5 rounded-lg border border-ink-muted/40 px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-section"
         >
           🕒 Import History
         </Link>
@@ -45,12 +45,12 @@ export function StepChooseType({
               type="button"
               onClick={() => onChange(cfg.entity, mode)}
               className={`rounded-xl border p-5 text-left transition-colors ${
-                selected ? "border-brand bg-brand/5 ring-1 ring-brand" : "border-slate-200 bg-white hover:border-brand/50"
+                selected ? "border-brand bg-brand/5 ring-1 ring-brand" : "border-hairline bg-surface hover:border-brand/50"
               }`}
             >
-              <p className="text-base font-bold text-slate-900">{cfg.label}</p>
-              <p className="mt-1 text-sm text-slate-500">{cfg.description}</p>
-              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <p className="text-base font-bold text-ink">{cfg.label}</p>
+              <p className="mt-1 text-sm text-ink-muted">{cfg.description}</p>
+              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
                 {cfg.fields.filter((f) => f.required).length} required field(s) · {cfg.fields.length} total
               </p>
             </button>
@@ -64,21 +64,21 @@ export function StepChooseType({
           subtitle="What you need before you prepare your file — expand any time to check again"
           defaultOpen
           badge={
-            <span className="flex-none rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">
+            <span className="flex-none rounded-full bg-danger-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-danger">
               {selectedConfig.fields.filter((f) => f.required).length} required
             </span>
           }
         >
           <div className="space-y-6">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Before you prepare your file</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">Before you prepare your file</p>
               <ul className="space-y-2">
                 {selectedConfig.mandatoryHighlights.map((h) => (
-                  <li key={h.label} className="flex gap-2 text-sm text-slate-700">
-                    <span className="mt-0.5 flex-none rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">Required</span>
+                  <li key={h.label} className="flex gap-2 text-sm text-ink-secondary">
+                    <span className="mt-0.5 flex-none rounded bg-danger-bg px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-danger">Required</span>
                     <span>
-                      <span className="font-semibold text-slate-900">{h.label}</span>
-                      {h.note && <span className="text-slate-500"> — {h.note}</span>}
+                      <span className="font-semibold text-ink">{h.label}</span>
+                      {h.note && <span className="text-ink-muted"> — {h.note}</span>}
                     </span>
                   </li>
                 ))}
@@ -86,28 +86,28 @@ export function StepChooseType({
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">All supported fields</p>
-              <div className="overflow-hidden rounded-lg border border-slate-200">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">All supported fields</p>
+              <div className="overflow-hidden rounded-lg border border-hairline">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                      <th className="px-4 py-2.5 font-semibold text-slate-600">Field</th>
-                      <th className="px-4 py-2.5 font-semibold text-slate-600">Status</th>
-                      <th className="px-4 py-2.5 font-semibold text-slate-600">Notes</th>
+                    <tr className="border-b border-hairline bg-section text-left">
+                      <th className="px-4 py-2.5 font-semibold text-ink-secondary">Field</th>
+                      <th className="px-4 py-2.5 font-semibold text-ink-secondary">Status</th>
+                      <th className="px-4 py-2.5 font-semibold text-ink-secondary">Notes</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedConfig.fields.map((f) => (
-                      <tr key={f.key} className="border-b border-slate-100 last:border-0">
-                        <td className="px-4 py-2.5 font-medium text-slate-800">{f.label}</td>
+                      <tr key={f.key} className="border-b border-hairline/50 last:border-0">
+                        <td className="px-4 py-2.5 font-medium text-ink">{f.label}</td>
                         <td className="px-4 py-2.5">
                           {f.required ? (
-                            <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Required *</span>
+                            <span className="rounded-full bg-danger-bg px-2 py-1 text-xs font-semibold text-danger">Required *</span>
                           ) : (
-                            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">Optional</span>
+                            <span className="rounded-full bg-sidebar px-2 py-1 text-xs font-medium text-ink-muted">Optional</span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500">{f.help ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-xs text-ink-muted">{f.help ?? "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -120,7 +120,7 @@ export function StepChooseType({
 
       {entity && (
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-slate-700">Import mode</h3>
+          <h3 className="mb-3 text-sm font-semibold text-ink-secondary">Import mode</h3>
           <div className="grid gap-3 sm:grid-cols-3">
             {MODES.map((m) => {
               const selected = mode === m.value;
@@ -130,11 +130,11 @@ export function StepChooseType({
                   type="button"
                   onClick={() => onChange(entity, m.value)}
                   className={`rounded-xl border p-4 text-left transition-colors ${
-                    selected ? "border-brand bg-brand/5 ring-1 ring-brand" : "border-slate-200 bg-white hover:border-brand/50"
+                    selected ? "border-brand bg-brand/5 ring-1 ring-brand" : "border-hairline bg-surface hover:border-brand/50"
                   }`}
                 >
-                  <p className="text-sm font-bold text-slate-900">{m.label}</p>
-                  <p className="mt-1 text-xs text-slate-500">{m.description}</p>
+                  <p className="text-sm font-bold text-ink">{m.label}</p>
+                  <p className="mt-1 text-xs text-ink-muted">{m.description}</p>
                 </button>
               );
             })}

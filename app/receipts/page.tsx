@@ -31,10 +31,10 @@ function emptyForm(): FormState {
 type InvoiceRow = { invoice: Invoice; outstanding: number; allocation: string };
 
 const STATUS_BADGE: Record<string, string> = {
-  open: "bg-blue-50 text-blue-700",
-  partial: "bg-amber-50 text-amber-700",
-  overdue: "bg-red-50 text-red-700",
-  paid: "bg-emerald-50 text-emerald-700",
+  open: "bg-info-bg text-info",
+  partial: "bg-warning-bg text-warning",
+  overdue: "bg-danger-bg text-danger",
+  paid: "bg-success-bg text-success",
 };
 
 export default function ReceiptEntryPage() {
@@ -320,10 +320,10 @@ export default function ReceiptEntryPage() {
     !selectedCustomer || selectedCustomer.credit_limit <= 0
       ? null
       : customerOutstanding > selectedCustomer.credit_limit
-      ? { label: "Over limit", cls: "bg-red-50 text-red-700" }
+      ? { label: "Over limit", cls: "bg-danger-bg text-danger" }
       : customerOutstanding > selectedCustomer.credit_limit * 0.8
-      ? { label: "Watch", cls: "bg-amber-50 text-amber-700" }
-      : { label: "Healthy", cls: "bg-emerald-50 text-emerald-700" };
+      ? { label: "Watch", cls: "bg-warning-bg text-warning" }
+      : { label: "Healthy", cls: "bg-success-bg text-success" };
 
   if (!isConfigured) {
     return (
@@ -336,9 +336,9 @@ export default function ReceiptEntryPage() {
 
   return (
     <div className="pb-28">
-      <p className="mb-1 text-xs font-medium text-slate-400">
+      <p className="mb-1 text-xs font-medium text-ink-muted">
         Dashboard <span className="mx-1">/</span> Accounts Receivable <span className="mx-1">/</span>{" "}
-        <span className="text-slate-600">Receipt Entry</span>
+        <span className="text-ink-secondary">Receipt Entry</span>
       </p>
       <PageHeader
         title="Receipt Entry"
@@ -347,7 +347,7 @@ export default function ReceiptEntryPage() {
           <div className="flex gap-2">
             <button
               onClick={exportCsv}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-ink-muted/40 bg-surface px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section"
             >
               Export CSV
             </button>
@@ -381,15 +381,15 @@ export default function ReceiptEntryPage() {
       </div>
 
       {successMsg && (
-        <div className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{successMsg}</div>
+        <div className="mb-4 rounded-lg bg-success-bg px-4 py-3 text-sm font-medium text-success">{successMsg}</div>
       )}
-      {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+      {error && <div className="mb-4 rounded-lg bg-danger-bg px-4 py-3 text-sm font-medium text-danger">{error}</div>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
         {/* LEFT 70% */}
         <div className="space-y-6 lg:col-span-7">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Receipt Information</h3>
+          <div className="rounded-2xl border border-hairline bg-surface p-6 shadow-sm">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-ink-muted">Receipt Information</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField label="Receipt No">
                 <input className={inputClass} value={form.receipt_no} onChange={(e) => setForm({ ...form, receipt_no: e.target.value })} />
@@ -423,18 +423,18 @@ export default function ReceiptEntryPage() {
               </FormField>
             </div>
             {isFutureDate && (
-              <p className="mt-3 text-xs font-medium text-amber-600">⚠ Receipt date is in the future — double-check before saving.</p>
+              <p className="mt-3 text-xs font-medium text-warning">⚠ Receipt date is in the future — double-check before saving.</p>
             )}
           </div>
 
           {/* Customer search */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Customer</h3>
+          <div className="rounded-2xl border border-hairline bg-surface p-6 shadow-sm">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-ink-muted">Customer</h3>
             {selectedCustomer ? (
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="flex items-center justify-between rounded-xl border border-hairline bg-section px-4 py-3">
                 <div>
-                  <p className="font-semibold text-slate-900">{selectedCustomer.name}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="font-semibold text-ink">{selectedCustomer.name}</p>
+                  <p className="text-xs text-ink-muted">
                     {selectedCustomer.code} {selectedCustomer.gstin ? `· GST ${selectedCustomer.gstin}` : ""}
                   </p>
                 </div>
@@ -455,15 +455,15 @@ export default function ReceiptEntryPage() {
                   onFocus={() => setShowCustomerDropdown(true)}
                 />
                 {showCustomerDropdown && filteredCustomers.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-hairline bg-surface shadow-lg">
                     {filteredCustomers.map((c) => (
                       <button
                         key={c.id}
                         onClick={() => selectCustomer(c)}
-                        className="flex w-full flex-col items-start px-4 py-2 text-left hover:bg-slate-50"
+                        className="flex w-full flex-col items-start px-4 py-2 text-left hover:bg-section"
                       >
-                        <span className="text-sm font-medium text-slate-800">{c.name}</span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-sm font-medium text-ink">{c.name}</span>
+                        <span className="text-xs text-ink-muted">
                           {c.code} {c.phone ? `· ${c.phone}` : ""} {c.email ? `· ${c.email}` : ""}
                         </span>
                       </button>
@@ -474,11 +474,11 @@ export default function ReceiptEntryPage() {
             )}
 
             {isDuplicate && (
-              <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3">
-                <p className="text-sm font-medium text-amber-800">
+              <div className="mt-4 rounded-lg bg-warning-bg px-4 py-3">
+                <p className="text-sm font-medium text-warning">
                   ⚠ Possible duplicate — a receipt for this customer with the same amount and date already exists.
                 </p>
-                <label className="mt-2 flex items-center gap-2 text-sm text-amber-800">
+                <label className="mt-2 flex items-center gap-2 text-sm text-warning">
                   <input type="checkbox" checked={duplicateAck} onChange={(e) => setDuplicateAck(e.target.checked)} />
                   This is not a duplicate, save anyway
                 </label>
@@ -487,15 +487,15 @@ export default function ReceiptEntryPage() {
           </div>
 
           {/* Invoice allocation grid */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-hairline bg-surface p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">Invoice Allocation</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wide text-ink-muted">Invoice Allocation</h3>
               {selectedCustomer && customerInvoices.length > 0 && (
                 <div className="flex gap-2">
-                  <button onClick={autoAllocateOldest} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                  <button onClick={autoAllocateOldest} className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section">
                     Allocate Oldest First
                   </button>
-                  <button onClick={clearAllocations} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                  <button onClick={clearAllocations} className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section">
                     Clear
                   </button>
                 </div>
@@ -503,21 +503,21 @@ export default function ReceiptEntryPage() {
             </div>
 
             {!selectedCustomer ? (
-              <p className="text-sm text-slate-400">Select a customer above to see their open invoices.</p>
+              <p className="text-sm text-ink-muted">Select a customer above to see their open invoices.</p>
             ) : loadingInvoices ? (
-              <p className="text-sm text-slate-400">Loading invoices…</p>
+              <p className="text-sm text-ink-muted">Loading invoices…</p>
             ) : customerInvoices.length === 0 ? (
-              <p className="text-sm text-slate-400">This customer has no open invoices.</p>
+              <p className="text-sm text-ink-muted">This customer has no open invoices.</p>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-slate-200">
+              <div className="overflow-hidden rounded-xl border border-hairline">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0">
-                    <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                      <th className="px-3 py-2 font-semibold text-slate-600">Invoice</th>
-                      <th className="px-3 py-2 font-semibold text-slate-600">Due Date</th>
-                      <th className="px-3 py-2 font-semibold text-slate-600">Status</th>
-                      <th className="px-3 py-2 font-semibold text-slate-600">Outstanding</th>
-                      <th className="px-3 py-2 font-semibold text-slate-600">Allocate</th>
+                    <tr className="border-b border-hairline bg-section text-left">
+                      <th className="px-3 py-2 font-semibold text-ink-secondary">Invoice</th>
+                      <th className="px-3 py-2 font-semibold text-ink-secondary">Due Date</th>
+                      <th className="px-3 py-2 font-semibold text-ink-secondary">Status</th>
+                      <th className="px-3 py-2 font-semibold text-ink-secondary">Outstanding</th>
+                      <th className="px-3 py-2 font-semibold text-ink-secondary">Allocate</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -525,18 +525,18 @@ export default function ReceiptEntryPage() {
                       const daysOverdue = Math.floor((Date.now() - new Date(r.invoice.due_date).getTime()) / 86400000);
                       const progress = Math.min(100, ((Number(r.allocation) || 0) / r.outstanding) * 100);
                       return (
-                        <tr key={r.invoice.id} className="border-b border-slate-100 last:border-0">
-                          <td className="px-3 py-2 font-medium text-slate-700">{r.invoice.invoice_no}</td>
-                          <td className="px-3 py-2 text-slate-600">
+                        <tr key={r.invoice.id} className="border-b border-hairline/50 last:border-0">
+                          <td className="px-3 py-2 font-medium text-ink-secondary">{r.invoice.invoice_no}</td>
+                          <td className="px-3 py-2 text-ink-secondary">
                             {new Date(r.invoice.due_date).toLocaleDateString("en-IN")}
-                            {daysOverdue > 0 && <span className="ml-1 text-xs font-medium text-red-500">({daysOverdue}d overdue)</span>}
+                            {daysOverdue > 0 && <span className="ml-1 text-xs font-medium text-danger">({daysOverdue}d overdue)</span>}
                           </td>
                           <td className="px-3 py-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[r.invoice.status]}`}>
                               {r.invoice.status}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-slate-700">₹{r.outstanding.toLocaleString("en-IN")}</td>
+                          <td className="px-3 py-2 text-ink-secondary">₹{r.outstanding.toLocaleString("en-IN")}</td>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
                               <input
@@ -550,9 +550,9 @@ export default function ReceiptEntryPage() {
                                 Full
                               </button>
                             </div>
-                            <div className="mt-1 h-1.5 w-full rounded-full bg-slate-100">
+                            <div className="mt-1 h-1.5 w-full rounded-full bg-sidebar">
                               <div
-                                className={`h-1.5 rounded-full ${progress >= 100 ? "bg-emerald-500" : "bg-brand"}`}
+                                className={`h-1.5 rounded-full ${progress >= 100 ? "bg-success" : "bg-brand"}`}
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
@@ -562,7 +562,7 @@ export default function ReceiptEntryPage() {
                     })}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
+                    <tr className="border-t border-hairline bg-section text-sm font-semibold text-ink-secondary">
                       <td className="px-3 py-2" colSpan={3}>
                         Totals
                       </td>
@@ -579,83 +579,83 @@ export default function ReceiptEntryPage() {
         {/* RIGHT 30% */}
         <div className="space-y-6 lg:col-span-3">
           {selectedCustomer ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Customer Snapshot</h3>
+            <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-sm">
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-muted">Customer Snapshot</h3>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Outstanding</dt>
-                  <dd className="font-semibold text-slate-800">₹{customerOutstanding.toLocaleString("en-IN")}</dd>
+                  <dt className="text-ink-muted">Outstanding</dt>
+                  <dd className="font-semibold text-ink">₹{customerOutstanding.toLocaleString("en-IN")}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Credit Limit</dt>
-                  <dd className="font-semibold text-slate-800">₹{Number(selectedCustomer.credit_limit).toLocaleString("en-IN")}</dd>
+                  <dt className="text-ink-muted">Credit Limit</dt>
+                  <dd className="font-semibold text-ink">₹{Number(selectedCustomer.credit_limit).toLocaleString("en-IN")}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Available Credit</dt>
-                  <dd className={`font-semibold ${availableCredit < 0 ? "text-red-600" : "text-slate-800"}`}>
+                  <dt className="text-ink-muted">Available Credit</dt>
+                  <dd className={`font-semibold ${availableCredit < 0 ? "text-danger" : "text-ink"}`}>
                     ₹{availableCredit.toLocaleString("en-IN")}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Credit Days</dt>
-                  <dd className="font-semibold text-slate-800">{selectedCustomer.credit_days} days</dd>
+                  <dt className="text-ink-muted">Credit Days</dt>
+                  <dd className="font-semibold text-ink">{selectedCustomer.credit_days} days</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">PAN</dt>
-                  <dd className="font-semibold text-slate-800">{selectedCustomer.pan ?? "—"}</dd>
+                  <dt className="text-ink-muted">PAN</dt>
+                  <dd className="font-semibold text-ink">{selectedCustomer.pan ?? "—"}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Customer Since</dt>
-                  <dd className="font-semibold text-slate-800">
+                  <dt className="text-ink-muted">Customer Since</dt>
+                  <dd className="font-semibold text-ink">
                     {new Date(selectedCustomer.created_at).toLocaleDateString("en-IN")}
                   </dd>
                 </div>
                 {risk && (
                   <div className="flex justify-between">
-                    <dt className="text-slate-500">Risk</dt>
+                    <dt className="text-ink-muted">Risk</dt>
                     <dd>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${risk.cls}`}>{risk.label}</span>
                     </dd>
                   </div>
                 )}
               </dl>
-              <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
+              <div className="mt-4 flex gap-2 border-t border-hairline/50 pt-4">
                 {selectedCustomer.phone && (
-                  <a href={`tel:${selectedCustomer.phone}`} className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-center text-xs font-medium text-slate-700 hover:bg-slate-50">
+                  <a href={`tel:${selectedCustomer.phone}`} className="flex-1 rounded-lg border border-ink-muted/40 px-3 py-1.5 text-center text-xs font-medium text-ink-secondary hover:bg-section">
                     Call
                   </a>
                 )}
                 {selectedCustomer.email && (
-                  <a href={`mailto:${selectedCustomer.email}`} className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-center text-xs font-medium text-slate-700 hover:bg-slate-50">
+                  <a href={`mailto:${selectedCustomer.email}`} className="flex-1 rounded-lg border border-ink-muted/40 px-3 py-1.5 text-center text-xs font-medium text-ink-secondary hover:bg-section">
                     Email
                   </a>
                 )}
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-center text-sm text-slate-400">
+            <div className="rounded-2xl border border-dashed border-ink-muted/40 bg-surface p-5 text-center text-sm text-ink-muted">
               Search a customer to see their outstanding, credit and contact details here.
             </div>
           )}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+          <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-sm">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-muted">
               {selectedCustomer ? `${selectedCustomer.name}'s Recent Receipts` : "Recent Receipts"}
             </h3>
             {(selectedCustomer ? recentForCustomer : globalRecent).length === 0 ? (
-              <p className="text-sm text-slate-400">Nothing yet.</p>
+              <p className="text-sm text-ink-muted">Nothing yet.</p>
             ) : (
               <ul className="space-y-2">
                 {(selectedCustomer ? recentForCustomer : globalRecent).map((r) => (
                   <li key={r.id} className="flex items-center justify-between text-sm">
                     <div>
-                      <p className="font-medium text-slate-700">{r.receipt_no}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="font-medium text-ink-secondary">{r.receipt_no}</p>
+                      <p className="text-xs text-ink-muted">
                         {!selectedCustomer && `${customerLookup.get(r.customer_id)?.name ?? "—"} · `}
                         {new Date(r.receipt_date).toLocaleDateString("en-IN")}
                       </p>
                     </div>
-                    <span className="font-semibold text-slate-800">₹{Number(r.amount).toLocaleString("en-IN")}</span>
+                    <span className="font-semibold text-ink">₹{Number(r.amount).toLocaleString("en-IN")}</span>
                   </li>
                 ))}
               </ul>
@@ -665,30 +665,30 @@ export default function ReceiptEntryPage() {
       </div>
 
       {/* Sticky live summary bar */}
-      <div className="fixed bottom-0 left-60 right-0 border-t border-slate-200 bg-white/95 px-8 py-4 backdrop-blur">
+      <div className="fixed bottom-0 left-60 right-0 border-t border-hairline bg-surface/95 px-8 py-4 backdrop-blur">
         <div className="flex items-center justify-between gap-6">
           <div className="flex flex-wrap gap-6 text-sm">
             <div>
-              <span className="text-slate-400">Receipt Amount </span>
-              <span className="font-semibold text-slate-800">₹{receiptAmount.toLocaleString("en-IN")}</span>
+              <span className="text-ink-muted">Receipt Amount </span>
+              <span className="font-semibold text-ink">₹{receiptAmount.toLocaleString("en-IN")}</span>
             </div>
             <div>
-              <span className="text-slate-400">Allocated </span>
-              <span className="font-semibold text-slate-800">₹{totalAllocated.toLocaleString("en-IN")}</span>
+              <span className="text-ink-muted">Allocated </span>
+              <span className="font-semibold text-ink">₹{totalAllocated.toLocaleString("en-IN")}</span>
             </div>
             <div>
-              <span className="text-slate-400">Pending </span>
-              <span className={`font-semibold ${pending > 0 ? "text-amber-600" : "text-slate-800"}`}>₹{pending.toLocaleString("en-IN")}</span>
+              <span className="text-ink-muted">Pending </span>
+              <span className={`font-semibold ${pending > 0 ? "text-warning" : "text-ink"}`}>₹{pending.toLocaleString("en-IN")}</span>
             </div>
             <div>
-              <span className="text-slate-400">Difference </span>
-              <span className={`font-semibold ${Math.abs(difference) < 0.01 ? "text-emerald-600" : "text-red-600"}`}>
+              <span className="text-ink-muted">Difference </span>
+              <span className={`font-semibold ${Math.abs(difference) < 0.01 ? "text-success" : "text-danger"}`}>
                 ₹{difference.toLocaleString("en-IN")}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-slate-400 sm:inline">Ctrl+S Save · Ctrl+N New · Esc Cancel</span>
+            <span className="hidden text-xs text-ink-muted sm:inline">Ctrl+S Save · Ctrl+N New · Esc Cancel</span>
             <button
               onClick={handleSave}
               disabled={saving || pageLoading}

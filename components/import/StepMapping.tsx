@@ -6,10 +6,10 @@ import { confidenceLabel } from "@/lib/import/match";
 import { listMappingTemplates, saveMappingTemplate, deleteMappingTemplate } from "@/lib/import/templates";
 
 const CONFIDENCE_TONE: Record<string, string> = {
-  high: "bg-emerald-100 text-emerald-700",
-  medium: "bg-blue-100 text-blue-700",
-  low: "bg-amber-100 text-amber-700",
-  none: "bg-slate-100 text-slate-400",
+  high: "bg-success-bg text-success",
+  medium: "bg-info-bg text-info",
+  low: "bg-warning-bg text-warning",
+  none: "bg-sidebar text-ink-muted",
 };
 
 /*
@@ -75,21 +75,21 @@ export function StepMapping({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Mapping templates</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Mapping templates</span>
           {templates.length === 0 ? (
-            <span className="text-xs text-slate-400">None saved yet</span>
+            <span className="text-xs text-ink-muted">None saved yet</span>
           ) : (
             templates.map((t) => (
-              <span key={t.id} className="flex items-center gap-1 rounded-full bg-slate-100 pl-3 pr-1 py-1 text-xs text-slate-600">
+              <span key={t.id} className="flex items-center gap-1 rounded-full bg-sidebar pl-3 pr-1 py-1 text-xs text-ink-secondary">
                 <button type="button" className="font-medium hover:text-brand" onClick={() => onChange(t.mapping)}>
                   {t.name}
                 </button>
                 <button
                   type="button"
                   aria-label={`Delete ${t.name}`}
-                  className="rounded-full px-1.5 text-slate-400 hover:bg-slate-200 hover:text-red-600"
+                  className="rounded-full px-1.5 text-ink-muted hover:bg-hairline hover:text-danger"
                   onClick={() => {
                     deleteMappingTemplate(t.id);
                     setTemplates(listMappingTemplates(entity.entity));
@@ -106,7 +106,7 @@ export function StepMapping({
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
             placeholder="Name this mapping…"
-            className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs outline-none focus:border-brand"
+            className="rounded-lg border border-ink-muted/40 px-2.5 py-1.5 text-xs outline-none focus:border-brand"
           />
           <button
             type="button"
@@ -120,32 +120,32 @@ export function StepMapping({
           >
             Save mapping
           </button>
-          <button type="button" onClick={onReset} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+          <button type="button" onClick={onReset} className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section">
             Reset to auto-map
           </button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-700">CSV mapping for {entity.label}</h3>
+        <h3 className="text-sm font-semibold text-ink-secondary">CSV mapping for {entity.label}</h3>
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-400">
+          <span className="text-ink-muted">
             {claimedHeaders} of {parsed.headers.length} CSV columns used
           </span>
           {missingRequiredCount > 0 && (
-            <span className="rounded-full bg-red-100 px-2.5 py-1 font-semibold text-red-700">{missingRequiredCount} required field(s) missing</span>
+            <span className="rounded-full bg-danger-bg px-2.5 py-1 font-semibold text-danger">{missingRequiredCount} required field(s) missing</span>
           )}
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left">
-              <th className="px-4 py-3 font-semibold text-slate-600">Destination field</th>
-              <th className="px-4 py-3 font-semibold text-slate-600">CSV column</th>
-              <th className="px-4 py-3 font-semibold text-slate-600">Sample value</th>
-              <th className="px-4 py-3 font-semibold text-slate-600">Mapping status</th>
+            <tr className="border-b border-hairline bg-section text-left">
+              <th className="px-4 py-3 font-semibold text-ink-secondary">Destination field</th>
+              <th className="px-4 py-3 font-semibold text-ink-secondary">CSV column</th>
+              <th className="px-4 py-3 font-semibold text-ink-secondary">Sample value</th>
+              <th className="px-4 py-3 font-semibold text-ink-secondary">Mapping status</th>
             </tr>
           </thead>
           <tbody>
@@ -156,24 +156,24 @@ export function StepMapping({
               const isMissingRequired = f.required && !selectedHeader;
 
               return (
-                <tr key={f.key} className={`border-b border-slate-100 last:border-0 ${isMissingRequired ? "bg-red-50" : ""}`}>
+                <tr key={f.key} className={`border-b border-hairline/50 last:border-0 ${isMissingRequired ? "bg-danger-bg" : ""}`}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-slate-800">{f.label}</span>
+                      <span className="font-medium text-ink">{f.label}</span>
                       {f.required ? (
-                        <span className="flex-none rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700">Required</span>
+                        <span className="flex-none rounded-full bg-danger-bg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-danger">Required</span>
                       ) : (
-                        <span className="flex-none rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">Optional</span>
+                        <span className="flex-none rounded-full bg-sidebar px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">Optional</span>
                       )}
                     </div>
-                    {f.help && <p className="mt-0.5 text-xs text-slate-400">{f.help}</p>}
+                    {f.help && <p className="mt-0.5 text-xs text-ink-muted">{f.help}</p>}
                   </td>
                   <td className="px-4 py-3">
                     <select
                       value={selectedHeader}
                       onChange={(e) => setFieldSource(f.key, e.target.value || null)}
-                      className={`rounded-lg border bg-white px-2.5 py-1.5 text-xs outline-none focus:border-brand ${
-                        isMissingRequired ? "border-red-300" : "border-slate-300"
+                      className={`rounded-lg border bg-surface px-2.5 py-1.5 text-xs outline-none focus:border-brand ${
+                        isMissingRequired ? "border-danger-border" : "border-ink-muted/40"
                       }`}
                     >
                       <option value="">— Not mapped —</option>
@@ -184,23 +184,23 @@ export function StepMapping({
                       ))}
                     </select>
                   </td>
-                  <td className="max-w-[14rem] truncate px-4 py-3 text-slate-500">
-                    {selectedHeader ? sampleFor(selectedHeader) || <em className="text-slate-300">empty</em> : "—"}
+                  <td className="max-w-[14rem] truncate px-4 py-3 text-ink-muted">
+                    {selectedHeader ? sampleFor(selectedHeader) || <em className="text-ink-muted/60">empty</em> : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-1.5">
                       {selectedHeader ? (
-                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">Mapped</span>
+                        <span className="rounded-full bg-success-bg px-2 py-1 text-xs font-medium text-success">Mapped</span>
                       ) : f.required ? (
-                        <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Missing — required</span>
+                        <span className="rounded-full bg-danger-bg px-2 py-1 text-xs font-semibold text-danger">Missing — required</span>
                       ) : (
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-400">Unmapped — optional</span>
+                        <span className="rounded-full bg-sidebar px-2 py-1 text-xs font-medium text-ink-muted">Unmapped — optional</span>
                       )}
                       {selectedHeader && isAutoMatch && confidence[selectedHeader] > 0 && (
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${CONFIDENCE_TONE[tone]}`}>{confLabel}</span>
                       )}
                       {selectedHeader && !isAutoMatch && (
-                        <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">Manual</span>
+                        <span className="rounded-full bg-info-bg px-2 py-1 text-xs font-medium text-info">Manual</span>
                       )}
                     </div>
                   </td>
@@ -212,7 +212,7 @@ export function StepMapping({
       </div>
 
       <div className="flex justify-between">
-        <button type="button" onClick={onBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100">
+        <button type="button" onClick={onBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-ink-secondary hover:bg-section">
           Back
         </button>
         <button

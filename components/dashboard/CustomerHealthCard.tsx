@@ -22,7 +22,7 @@ function CustomerHealthCardImpl({ segments }: { segments: HealthSegment[] }) {
         {segments.map((seg) => (
           <div key={seg.label} className="flex items-center gap-3">
             <span className={`w-20 flex-none text-[13px] font-medium ${seg.colorClass}`}>{seg.label}</span>
-            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-black/[0.04]">
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-ink/[0.04]">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-premium ${seg.barClass}`}
                 style={{ width: totalCustomers ? `${(seg.count / totalCustomers) * 100}%` : "0%" }}

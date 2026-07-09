@@ -20,26 +20,26 @@ export const STATUS_ICON: Record<InvoiceStatus, string> = {
   overdue: "⚠️",
 };
 
-/** Solid badge (pill) styles — text + background. */
+/** Solid badge (pill) styles — text + background. Semantic tokens flip with the theme. */
 export const STATUS_BADGE: Record<InvoiceStatus, string> = {
-  open: "bg-blue-50 text-blue-700",
-  partial: "bg-amber-50 text-amber-700",
-  paid: "bg-emerald-50 text-emerald-700",
-  overdue: "bg-red-50 text-red-700",
+  open: "bg-info-bg text-info",
+  partial: "bg-warning-bg text-warning",
+  paid: "bg-success-bg text-success",
+  overdue: "bg-danger-bg text-danger",
 };
 
 /** Stronger variant for the hero header badge — adds a ring. */
 export const STATUS_BADGE_STRONG: Record<InvoiceStatus, string> = {
-  open: "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200",
-  partial: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200",
-  paid: "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200",
-  overdue: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-200",
+  open: "bg-info-bg text-info ring-1 ring-inset ring-info-border",
+  partial: "bg-warning-bg text-warning ring-1 ring-inset ring-warning-border",
+  paid: "bg-success-bg text-success ring-1 ring-inset ring-success-border",
+  overdue: "bg-danger-bg text-danger ring-1 ring-inset ring-danger-border",
 };
 
 /** Accent used for hero numbers / progress bars keyed off status. */
 export const STATUS_ACCENT_TEXT: Record<InvoiceStatus, string> = {
-  open: "text-blue-600",
-  partial: "text-amber-600",
-  paid: "text-emerald-600",
-  overdue: "text-red-600",
+  open: "text-info",
+  partial: "text-warning",
+  paid: "text-success",
+  overdue: "text-danger",
 };

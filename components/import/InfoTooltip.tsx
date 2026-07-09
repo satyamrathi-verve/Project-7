@@ -16,7 +16,7 @@ export function InfoTooltip({ text }: { text: string }) {
         onBlur={() => setOpen(false)}
         onClick={(e) => e.preventDefault()}
         aria-label="More information"
-        className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold leading-none text-slate-600 hover:bg-slate-300"
+        className="flex h-4 w-4 flex-none items-center justify-center rounded-full bg-hairline text-[10px] font-bold leading-none text-ink-secondary hover:bg-hairline"
       >
         i
       </button>

@@ -467,7 +467,7 @@ export default function DashboardPage() {
         <button
           onClick={load}
           aria-label="Refresh dashboard data"
-          className="rounded-lg border border-hairline bg-surface px-3.5 py-2 text-sm font-medium text-ink-secondary transition-all duration-150 hover:-translate-y-0.5 hover:border-brand/20 hover:bg-black/[0.02] hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+          className="rounded-lg border border-hairline bg-surface px-3.5 py-2 text-sm font-medium text-ink-secondary transition-all duration-150 hover:-translate-y-0.5 hover:border-brand/20 hover:bg-ink/[0.03] hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
         >
           ↻ Refresh
         </button>
@@ -597,9 +597,9 @@ export default function DashboardPage() {
           <DistributionDonut
             centerLabel={`₹${(model.paidAmount + model.openAmount + model.overdueAmount).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
             segments={[
-              { label: "Paid", value: model.paidAmount, color: "#059669", colorClass: "bg-success" },
-              { label: "Open", value: model.openAmount, color: "#4F46E5", colorClass: "bg-info" },
-              { label: "Overdue", value: model.overdueAmount, color: "#DC2626", colorClass: "bg-danger" },
+              { label: "Paid", value: model.paidAmount, color: "rgb(var(--color-success))", colorClass: "bg-success" },
+              { label: "Open", value: model.openAmount, color: "rgb(var(--color-info))", colorClass: "bg-info" },
+              { label: "Overdue", value: model.overdueAmount, color: "rgb(var(--color-danger))", colorClass: "bg-danger" },
             ]}
           />
         </DashboardCard>

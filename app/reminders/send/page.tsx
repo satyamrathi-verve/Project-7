@@ -227,15 +227,15 @@ export default function AutoEmailShootPage() {
 
       {/* Success banner */}
       {showSuccess && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-            <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="mb-6 flex items-center gap-3 rounded-xl bg-success-bg border border-success-border p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success-bg">
+            <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <p className="font-semibold text-emerald-800">Reminders sent successfully!</p>
-            <p className="text-sm text-emerald-600">{sentCount} email(s) have been queued for delivery.</p>
+            <p className="font-semibold text-success">Reminders sent successfully!</p>
+            <p className="text-sm text-success">{sentCount} email(s) have been queued for delivery.</p>
           </div>
         </div>
       )}
@@ -279,15 +279,15 @@ export default function AutoEmailShootPage() {
           {/* Left: Email list */}
           <div className="xl:col-span-2 space-y-4">
             {/* Template selector + actions */}
-            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white p-4">
+            <div className="flex flex-wrap items-center gap-4 rounded-xl border border-hairline bg-surface p-4">
               <div className="flex-1 min-w-[200px]">
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wide mb-1">
                   Email Template
                 </label>
                 <select
                   value={selectedTemplateId ?? ""}
                   onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none"
+                  className="w-full rounded-lg border border-ink-muted/40 px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand outline-none"
                 >
                   {templates.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -305,7 +305,7 @@ export default function AutoEmailShootPage() {
                 </button>
                 <button
                   onClick={() => toggleAll(false)}
-                  className="text-sm font-medium text-slate-500 hover:underline"
+                  className="text-sm font-medium text-ink-muted hover:underline"
                 >
                   Deselect All
                 </button>
@@ -345,34 +345,34 @@ export default function AutoEmailShootPage() {
 
           {/* Right: Recent activity */}
           <div className="xl:col-span-1">
-            <div className="sticky top-8 rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-100 px-5 py-4">
-                <h3 className="font-semibold text-slate-900">Recent Reminders</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Last 20 emails sent</p>
+            <div className="sticky top-8 rounded-xl border border-hairline bg-surface shadow-sm">
+              <div className="border-b border-hairline/50 px-5 py-4">
+                <h3 className="font-semibold text-ink">Recent Reminders</h3>
+                <p className="text-xs text-ink-muted mt-0.5">Last 20 emails sent</p>
               </div>
               <div className="max-h-[600px] overflow-y-auto">
                 {recentLogs.length === 0 ? (
-                  <div className="p-6 text-center text-sm text-slate-400">
+                  <div className="p-6 text-center text-sm text-ink-muted">
                     No reminders sent yet.
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-hairline/50">
                     {recentLogs.map((log) => (
                       <div key={log.id} className="px-5 py-3">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-slate-800">
+                            <p className="truncate text-sm font-medium text-ink">
                               {log.to_email}
                             </p>
-                            <p className="truncate text-xs text-slate-500 mt-0.5">
+                            <p className="truncate text-xs text-ink-muted mt-0.5">
                               {log.subject}
                             </p>
                           </div>
-                          <span className="flex-none inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                          <span className="flex-none inline-flex items-center rounded-full bg-success-bg px-2 py-0.5 text-xs font-medium text-success">
                             {log.status}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-ink-muted mt-1">
                           {new Date(log.sent_at).toLocaleString("en-IN", {
                             day: "2-digit",
                             month: "short",
@@ -396,8 +396,8 @@ export default function AutoEmailShootPage() {
 function Header() {
   return (
     <div className="mb-6">
-      <h2 className="text-2xl font-bold text-slate-900">Auto Email Shoot</h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <h2 className="text-2xl font-bold text-ink">Auto Email Shoot</h2>
+      <p className="mt-1 text-sm text-ink-muted">
         Send reminder emails to customers with overdue invoices. Select a template, review the emails, and send in bulk.
       </p>
     </div>
@@ -416,18 +416,18 @@ function StatCard({
   color: "red" | "amber" | "blue" | "slate";
 }) {
   const colorClasses = {
-    red: "bg-red-50 border-red-100",
-    amber: "bg-amber-50 border-amber-100",
-    blue: "bg-blue-50 border-blue-100",
-    slate: "bg-slate-50 border-slate-100",
+    red: "bg-danger-bg border-danger-border",
+    amber: "bg-warning-bg border-warning-border",
+    blue: "bg-info-bg border-info-border",
+    slate: "bg-section border-hairline/50",
   };
   return (
     <div className={`rounded-xl border p-4 ${colorClasses[color]}`}>
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
         <span>{icon}</span>
         {label}
       </div>
-      <p className="mt-2 text-xl font-bold text-slate-900">{value}</p>
+      <p className="mt-2 text-xl font-bold text-ink">{value}</p>
     </div>
   );
 }
@@ -443,10 +443,10 @@ function EmailCard({
 
   return (
     <div
-      className={`rounded-xl border bg-white p-4 transition-all ${
+      className={`rounded-xl border bg-surface p-4 transition-all ${
         preview.selected
           ? "border-brand ring-1 ring-brand/20 shadow-sm"
-          : "border-slate-200"
+          : "border-hairline"
       }`}
     >
       <div className="flex items-start gap-4">
@@ -456,7 +456,7 @@ function EmailCard({
           className={`mt-1 flex h-5 w-5 flex-none items-center justify-center rounded border-2 transition-colors ${
             preview.selected
               ? "border-brand bg-brand text-white"
-              : "border-slate-300 bg-white"
+              : "border-ink-muted/40 bg-surface"
           }`}
         >
           {preview.selected && (
@@ -474,26 +474,26 @@ function EmailCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h4 className="font-semibold text-slate-900">{preview.invoice.customer.name}</h4>
-              <p className="text-sm text-slate-500">{preview.to_email}</p>
+              <h4 className="font-semibold text-ink">{preview.invoice.customer.name}</h4>
+              <p className="text-sm text-ink-muted">{preview.to_email}</p>
             </div>
             <div className="text-right flex-none">
-              <p className="font-bold text-red-600">{formatCurrency(preview.invoice.outstanding)}</p>
-              <p className="text-xs text-red-500">{preview.invoice.days_overdue} days overdue</p>
+              <p className="font-bold text-danger">{formatCurrency(preview.invoice.outstanding)}</p>
+              <p className="text-xs text-danger">{preview.invoice.days_overdue} days overdue</p>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded bg-slate-100 px-2 py-1 font-medium text-slate-600">
+            <span className="rounded bg-sidebar px-2 py-1 font-medium text-ink-secondary">
               {preview.invoice.invoice_no}
             </span>
-            <span className="text-slate-400">Due: {formatDate(preview.invoice.due_date)}</span>
+            <span className="text-ink-muted">Due: {formatDate(preview.invoice.due_date)}</span>
           </div>
 
           {/* Subject preview */}
-          <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Subject</p>
-            <p className="text-sm text-slate-800 mt-0.5">{preview.subject}</p>
+          <div className="mt-3 rounded-lg bg-section px-3 py-2">
+            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide">Subject</p>
+            <p className="text-sm text-ink mt-0.5">{preview.subject}</p>
           </div>
 
           {/* Expandable body */}
@@ -513,8 +513,8 @@ function EmailCard({
           </button>
 
           {expanded && (
-            <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
-              <p className="whitespace-pre-line text-sm text-slate-700 leading-relaxed">
+            <div className="mt-2 rounded-lg border border-hairline bg-surface p-3">
+              <p className="whitespace-pre-line text-sm text-ink-secondary leading-relaxed">
                 {preview.body}
               </p>
             </div>
@@ -527,12 +527,12 @@ function EmailCard({
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-3xl">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-ink-muted/40 bg-surface px-6 py-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success-bg text-3xl">
         🎉
       </div>
-      <h3 className="mt-4 text-lg font-semibold text-slate-900">All caught up!</h3>
-      <p className="mt-2 max-w-sm text-sm text-slate-500">
+      <h3 className="mt-4 text-lg font-semibold text-ink">All caught up!</h3>
+      <p className="mt-2 max-w-sm text-sm text-ink-muted">
         No overdue invoices found. All your customers are paying on time.
       </p>
     </div>

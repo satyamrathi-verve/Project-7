@@ -51,9 +51,9 @@ export function StepResults({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center">
-        <p className="text-2xl font-bold text-emerald-800">{result.cancelled ? "Import cancelled" : "Import complete"}</p>
-        <p className="mt-1 text-sm text-emerald-700">
+      <div className="rounded-xl border border-success-border bg-success-bg p-6 text-center">
+        <p className="text-2xl font-bold text-success">{result.cancelled ? "Import cancelled" : "Import complete"}</p>
+        <p className="mt-1 text-sm text-success">
           {result.created + result.updated} of {result.rows.length + result.skipped} rows processed in {(result.durationMs / 1000).toFixed(1)}s
         </p>
       </div>
@@ -65,26 +65,26 @@ export function StepResults({
         <StatCard icon="✕" label="Failed" value={result.failed.toLocaleString()} accent="red" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 text-center text-sm text-slate-500 sm:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          Total duration: <span className="font-semibold text-slate-800">{(result.durationMs / 1000).toFixed(1)}s</span>
+      <div className="grid grid-cols-2 gap-4 text-center text-sm text-ink-muted sm:grid-cols-2">
+        <div className="rounded-xl border border-hairline bg-surface p-4">
+          Total duration: <span className="font-semibold text-ink">{(result.durationMs / 1000).toFixed(1)}s</span>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          Processing speed: <span className="font-semibold text-slate-800">{speed} rows/s</span>
+        <div className="rounded-xl border border-hairline bg-surface p-4">
+          Processing speed: <span className="font-semibold text-ink">{speed} rows/s</span>
         </div>
       </div>
 
       {failedRows.length > 0 && (
-        <div className="rounded-xl border border-red-200 bg-white p-5">
-          <p className="text-sm font-bold text-red-700">{failedRows.length} row(s) failed</p>
-          <div className="mt-3 max-h-48 overflow-y-auto rounded-lg border border-slate-100">
+        <div className="rounded-xl border border-danger-border bg-surface p-5">
+          <p className="text-sm font-bold text-danger">{failedRows.length} row(s) failed</p>
+          <div className="mt-3 max-h-48 overflow-y-auto rounded-lg border border-hairline/50">
             <table className="w-full text-xs">
               <tbody>
                 {failedRows.slice(0, 200).map((r) => (
-                  <tr key={r.rowIndex} className="border-b border-slate-100 last:border-0">
-                    <td className="px-3 py-2 text-slate-400">#{r.rowIndex + 1}</td>
-                    <td className="px-3 py-2 font-medium text-slate-700">{r.key}</td>
-                    <td className="px-3 py-2 text-red-600">{r.error}</td>
+                  <tr key={r.rowIndex} className="border-b border-hairline/50 last:border-0">
+                    <td className="px-3 py-2 text-ink-muted">#{r.rowIndex + 1}</td>
+                    <td className="px-3 py-2 font-medium text-ink-secondary">{r.key}</td>
+                    <td className="px-3 py-2 text-danger">{r.error}</td>
                   </tr>
                 ))}
               </tbody>
@@ -93,26 +93,26 @@ export function StepResults({
           <button
             type="button"
             onClick={() => onRetryFailed(failedRows.map((r) => r.rowIndex))}
-            className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-700"
+            className="mt-3 rounded-lg bg-danger px-4 py-2 text-xs font-medium text-white hover:bg-danger"
           >
             Retry failed rows
           </button>
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white p-5">
-        <button type="button" onClick={downloadErrorReport} disabled={failedRows.length === 0} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+      <div className="flex flex-wrap gap-3 rounded-xl border border-hairline bg-surface p-5">
+        <button type="button" onClick={downloadErrorReport} disabled={failedRows.length === 0} className="rounded-lg border border-ink-muted/40 px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section disabled:cursor-not-allowed disabled:opacity-40">
           Download error report
         </button>
-        <button type="button" onClick={downloadSuccessReport} disabled={successRows.length === 0} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+        <button type="button" onClick={downloadSuccessReport} disabled={successRows.length === 0} className="rounded-lg border border-ink-muted/40 px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section disabled:cursor-not-allowed disabled:opacity-40">
           Download success report
         </button>
         {recordLink && (
-          <Link href={recordLink} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+          <Link href={recordLink} className="rounded-lg border border-ink-muted/40 px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section">
             View imported records
           </Link>
         )}
-        <Link href="/upload/history" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+        <Link href="/upload/history" className="rounded-lg border border-ink-muted/40 px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section">
           View Import History
         </Link>
         <button
@@ -124,7 +124,7 @@ export function StepResults({
             setUndoing(false);
             setUndone(true);
           }}
-          className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-danger-border px-4 py-2 text-sm font-medium text-danger hover:bg-danger-bg disabled:cursor-not-allowed disabled:opacity-40"
         >
           {undone ? "Undone" : undoing ? "Undoing…" : "Undo this import"}
         </button>
@@ -133,7 +133,7 @@ export function StepResults({
         </button>
       </div>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-ink-muted">
         "Undo" deletes every record this run created and restores the previous values of every record it updated — it isn't a database transaction rollback (that
         would need a backend function this project intentionally doesn't add), so it only works immediately after the run, before other changes are made to the same
         records.

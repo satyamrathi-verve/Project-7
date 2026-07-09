@@ -2,8 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Design tokens as CSS variables (RGB triples so Tailwind's <alpha-value>
+  opacity modifiers like bg-info/10 keep working). tailwind.config.ts reads
+  every semantic color from one of these — flipping the `.dark` class on
+  <html> re-themes the whole app without touching component classNames.
+*/
 :root {
   color-scheme: light;
+
+  --color-brand: 59 89 152;
+  --color-brand-dark: 45 67 115;
+  --color-brand-light: 74 106 168;
+
+  --color-canvas: 247 248 250;
+  --color-surface: 255 255 255;
+  --color-elevated: 252 252 253;
+  --color-sidebar: 242 244 247;
+  --color-section: 250 251 252;
+  --color-hairline: 229 231 235;
+
+  --color-ink: 17 24 39;
+  --color-ink-secondary: 75 85 99;
+  --color-ink-muted: 107 114 128;
+
+  --color-success: 5 150 105;
+  --color-success-bg: 236 253 245;
+  --color-success-border: 167 243 208;
+
+  --color-warning: 217 119 6;
+  --color-warning-bg: 255 251 235;
+  --color-warning-border: 253 230 138;
+
+  --color-danger: 220 38 38;
+  --color-danger-bg: 254 242 242;
+  --color-danger-border: 254 202 202;
+
+  --color-info: 79 70 229;
+  --color-info-bg: 238 242 255;
+  --color-info-border: 199 210 254;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.05), 0 18px 50px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 10px 24px rgba(15, 23, 42, 0.08), 0 24px 60px rgba(15, 23, 42, 0.10);
+}
+
+:root.dark {
+  color-scheme: dark;
+
+  /* Brand blue brightened a touch so it still pops on dark surfaces. */
+  --color-brand: 108 140 214;
+  --color-brand-dark: 79 106 168;
+  --color-brand-light: 140 168 230;
+
+  --color-canvas: 10 14 23;
+  --color-surface: 17 23 36;
+  --color-elevated: 22 29 45;
+  --color-sidebar: 13 18 29;
+  --color-section: 20 26 41;
+  --color-hairline: 40 49 68;
+
+  --color-ink: 236 239 244;
+  --color-ink-secondary: 176 184 199;
+  --color-ink-muted: 132 141 158;
+
+  --color-success: 52 211 153;
+  --color-success-bg: 6 33 27;
+  --color-success-border: 16 84 63;
+
+  --color-warning: 251 191 36;
+  --color-warning-bg: 41 28 6;
+  --color-warning-border: 120 78 12;
+
+  --color-danger: 248 113 113;
+  --color-danger-bg: 42 15 15;
+  --color-danger-border: 122 32 32;
+
+  --color-info: 129 140 248;
+  --color-info-bg: 24 24 51;
+  --color-info-border: 63 63 122;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.28), 0 18px 50px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.35), 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 32px rgba(108, 140, 214, 0.12);
+}
+
+body {
+  @apply text-ink antialiased;
+  background-color: rgb(var(--color-canvas));
+  position: relative;
+  min-height: 100vh;
+  transition: background-color 200ms ease-out, color 200ms ease-out;
 }
 
 /*
@@ -13,13 +100,6 @@
   paper grain keeps the surface from looking flat. All three sit behind the
   app shell (z-0); the shell itself is lifted to z-10 in layout.tsx.
 */
-body {
-  @apply text-ink antialiased;
-  background-color: #f7f8fa;
-  position: relative;
-  min-height: 100vh;
-}
-
 body::before {
   content: "";
   position: fixed;
@@ -32,6 +112,13 @@ body::before {
     radial-gradient(1400px circle at 50% 50%, transparent 60%, rgba(17, 24, 39, 0.025) 100%);
 }
 
+:root.dark body::before {
+  background:
+    radial-gradient(1100px circle at 100% -10%, rgba(108, 140, 214, 0.1), transparent 55%),
+    radial-gradient(900px circle at -10% 100%, rgba(129, 140, 248, 0.06), transparent 60%),
+    radial-gradient(1400px circle at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
+}
+
 body::after {
   content: "";
   position: fixed;
@@ -41,6 +128,11 @@ body::after {
   opacity: 0.02;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+:root.dark body::after {
+  opacity: 0.04;
+  mix-blend-mode: overlay;
 }
 
 @media (prefers-reduced-motion: no-preference) {

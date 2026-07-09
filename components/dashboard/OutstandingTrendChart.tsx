@@ -31,25 +31,24 @@ function OutstandingTrendChartImpl({ points }: { points: { label: string; value:
       <svg viewBox={`0 0 ${w} ${h}`} className="h-40 w-full overflow-visible" preserveAspectRatio="none">
         <defs>
           <linearGradient id="outstandingFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3B5998" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#3B5998" stopOpacity="0" />
+            <stop offset="0%" stopColor="rgb(var(--color-brand))" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="rgb(var(--color-brand))" stopOpacity="0" />
           </linearGradient>
         </defs>
         {/* Subtle horizontal gridlines for an axis feel */}
         {[0.25, 0.5, 0.75].map((f) => (
-          <line key={f} x1={0} x2={w} y1={h * f} y2={h * f} stroke="#E5E7EB" strokeWidth={1} strokeDasharray="4 4" />
+          <line key={f} x1={0} x2={w} y1={h * f} y2={h * f} className="stroke-hairline" strokeWidth={1} strokeDasharray="4 4" />
         ))}
         <polygon points={areaPoints} fill="url(#outstandingFill)" />
         <polyline
           points={linePoints}
           fill="none"
-          stroke="#3B5998"
           strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeDasharray={dash}
           strokeDashoffset={dash}
-          className="animate-draw-line"
+          className="stroke-brand animate-draw-line"
         />
         {coords.map(([x, y], i) => (
           <circle
@@ -57,9 +56,8 @@ function OutstandingTrendChartImpl({ points }: { points: { label: string; value:
             cx={x}
             cy={y}
             r={i === coords.length - 1 ? 4 : 2.5}
-            fill="#3B5998"
+            className="fill-brand cursor-pointer [transform-box:fill-box] [transform-origin:center] transition-transform duration-150 hover:scale-125"
             opacity={i === coords.length - 1 ? 1 : 0.5}
-            className="cursor-pointer [transform-box:fill-box] [transform-origin:center] transition-transform duration-150 hover:scale-125"
           >
             <title>
               {points[i].label}: {formatMoney(points[i].value)}

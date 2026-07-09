@@ -44,10 +44,10 @@ export function StickySummaryBar({
         visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
       }`}
     >
-      <div className="mt-3 flex w-full max-w-5xl flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white/95 px-4 py-2.5 shadow-[0_4px_14px_rgba(0,0,0,0.08),0_10px_30px_rgba(0,0,0,0.06)] backdrop-blur">
-        <span className="text-sm font-semibold text-slate-800">{invoice.invoice_no}</span>
+      <div className="mt-3 flex w-full max-w-5xl flex-wrap items-center gap-3 rounded-xl border border-hairline bg-surface/95 px-4 py-2.5 shadow-[0_4px_14px_rgba(0,0,0,0.08),0_10px_30px_rgba(0,0,0,0.06)] backdrop-blur">
+        <span className="text-sm font-semibold text-ink">{invoice.invoice_no}</span>
         <StatusBadge status={invoice.status} />
-        <span className="text-sm text-slate-400">Outstanding</span>
+        <span className="text-sm text-ink-muted">Outstanding</span>
         <span className={`text-base font-bold tabular-nums ${STATUS_ACCENT_TEXT[invoice.status]}`}>
           {`₹${outstanding.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
         </span>

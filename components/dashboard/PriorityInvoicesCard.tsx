@@ -40,7 +40,7 @@ function PriorityInvoicesCardImpl({ rows }: { rows: PriorityRow[] }) {
       ) : (
         <ul className="divide-y divide-hairline">
           {rows.map((r) => (
-            <li key={r.invoiceId} className="flex flex-wrap items-center gap-3 py-3 transition-colors duration-150 hover:bg-black/[0.012]">
+            <li key={r.invoiceId} className="flex flex-wrap items-center gap-3 py-3 transition-colors duration-150 hover:bg-ink/[0.012]">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <Link
@@ -73,7 +73,7 @@ function PriorityInvoicesCardImpl({ rows }: { rows: PriorityRow[] }) {
                   href={`/invoices/${r.invoiceId}`}
                   aria-label={`View invoice ${r.invoiceNo}`}
                   title="View invoice"
-                  className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-black/[0.05] hover:text-ink ${FOCUS_RING}`}
+                  className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-ink/[0.05] hover:text-ink ${FOCUS_RING}`}
                 >
                   <Icon>👁️</Icon>
                 </Link>
@@ -81,7 +81,7 @@ function PriorityInvoicesCardImpl({ rows }: { rows: PriorityRow[] }) {
                   href={`/invoices/${r.invoiceId}`}
                   aria-label={`Send reminder for ${r.invoiceNo}`}
                   title="Send reminder"
-                  className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-black/[0.05] hover:text-ink ${FOCUS_RING}`}
+                  className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-ink/[0.05] hover:text-ink ${FOCUS_RING}`}
                 >
                   <Icon>📨</Icon>
                 </Link>
@@ -89,7 +89,7 @@ function PriorityInvoicesCardImpl({ rows }: { rows: PriorityRow[] }) {
                   href="/receipts"
                   aria-label={`Record payment for ${r.invoiceNo}`}
                   title="Record payment"
-                  className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-black/[0.05] hover:text-ink ${FOCUS_RING}`}
+                  className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-ink/[0.05] hover:text-ink ${FOCUS_RING}`}
                 >
                   <Icon>💵</Icon>
                 </Link>
@@ -98,7 +98,7 @@ function PriorityInvoicesCardImpl({ rows }: { rows: PriorityRow[] }) {
                     href={`tel:${r.customerPhone}`}
                     aria-label={`Call ${r.customerName} at ${r.customerPhone}`}
                     title={`Call ${r.customerPhone}`}
-                    className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-black/[0.05] hover:text-ink ${FOCUS_RING}`}
+                    className={`rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-ink/[0.05] hover:text-ink ${FOCUS_RING}`}
                   >
                     <Icon>📞</Icon>
                   </a>

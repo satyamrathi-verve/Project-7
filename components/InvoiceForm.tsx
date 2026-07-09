@@ -396,7 +396,7 @@ export function InvoiceForm({
         <button
           type="button"
           onClick={onCancel}
-          className={`rounded-lg px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.04] ${FOCUS_RING}`}
+          className={`rounded-lg px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-ink/[0.04] ${FOCUS_RING}`}
         >
           Cancel
         </button>
@@ -405,7 +405,7 @@ export function InvoiceForm({
             type="button"
             onClick={handleSaveAndNew}
             disabled={!canSave}
-            className={`rounded-lg border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary transition-all duration-150 hover:scale-[1.02] hover:bg-black/[0.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 ${FOCUS_RING}`}
+            className={`rounded-lg border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary transition-all duration-150 hover:scale-[1.02] hover:bg-ink/[0.03] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 ${FOCUS_RING}`}
           >
             {saving === "saveNew" ? "Saving…" : "Save & New"}
           </button>

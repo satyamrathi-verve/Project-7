@@ -49,7 +49,7 @@ export default function HomePage() {
           <li>The database and all its data already exist in Supabase — you never touch the backend.</li>
           <li>You point <span className="font-medium text-brand">Claude Code</span> at a screen from the list; it writes the page, you tweak it in plain English.</li>
           <li>When a screen works, you commit &amp; push — that scores your team on the live leaderboard.</li>
-          <li>Read <code className="rounded bg-black/[0.04] px-1">README.md</code> for setup and the kickoff prompt to paste into Claude Code.</li>
+          <li>Read <code className="rounded bg-ink/[0.04] px-1">README.md</code> for setup and the kickoff prompt to paste into Claude Code.</li>
         </ol>
       </div>
 

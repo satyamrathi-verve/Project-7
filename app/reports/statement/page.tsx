@@ -232,9 +232,9 @@ export default function CustomerStatementPage() {
   const lastReminder = reminders[0] ?? null;
 
   const accountStatus = useMemo(() => {
-    if (overdueAmount > 0) return { label: "Overdue", classes: "bg-red-50 text-red-700 ring-red-200" };
-    if (outstandingBalance > 0) return { label: "Current", classes: "bg-blue-50 text-blue-700 ring-blue-200" };
-    return { label: "Settled", classes: "bg-emerald-50 text-emerald-700 ring-emerald-200" };
+    if (overdueAmount > 0) return { label: "Overdue", classes: "bg-danger-bg text-danger ring-danger-border" };
+    if (outstandingBalance > 0) return { label: "Current", classes: "bg-info-bg text-info ring-info-border" };
+    return { label: "Settled", classes: "bg-success-bg text-success ring-success-border" };
   }, [overdueAmount, outstandingBalance]);
 
   // Full chronological ledger (opening balance + every invoice/receipt), running balance computed once.
@@ -416,8 +416,8 @@ export default function CustomerStatementPage() {
     return (
       <>
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-slate-900">Customer Statement</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-2xl font-bold text-ink">Customer Statement</h2>
+          <p className="mt-1 text-sm text-ink-muted">
             Review the running statement of invoices, receipts, and outstanding balance for a selected customer.
           </p>
         </div>
@@ -431,29 +431,29 @@ export default function CustomerStatementPage() {
       {/* Page header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4 print:hidden">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Customer Statement</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-2xl font-bold text-ink">Customer Statement</h2>
+          <p className="mt-1 text-sm text-ink-muted">
             Review the running statement of invoices, receipts, and outstanding balance for a selected customer.
           </p>
         </div>
         <div className="flex flex-none flex-wrap items-center gap-2">
           <button
             onClick={() => (customer ? exportCsv() : toast("Select a customer first."))}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-section"
             title="Downloads a CSV file — opens directly in Excel or Google Sheets"
           >
             Download Excel
           </button>
           <button
             onClick={() => toast("Emailing statements isn't built yet — this button is a placeholder for that screen.")}
-            className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
+            className="rounded-lg border border-dashed border-ink-muted/40 bg-surface px-3 py-2 text-sm font-medium text-ink-muted hover:bg-section"
             title="Not built yet"
           >
             Email Statement
           </button>
           <button
             onClick={() => toast("Reminders are sent from the Auto Email Shoot screen, not from here.")}
-            className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
+            className="rounded-lg border border-dashed border-ink-muted/40 bg-surface px-3 py-2 text-sm font-medium text-ink-muted hover:bg-section"
             title="Not built yet"
           >
             Send Reminder
@@ -469,14 +469,14 @@ export default function CustomerStatementPage() {
       </div>
 
       {note && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 print:hidden">
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-warning-border bg-warning-bg px-3 py-2 text-sm text-warning print:hidden">
           <span>ℹ️</span>
           {note}
         </div>
       )}
 
       {/* Control bar */}
-      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 print:hidden">
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-hairline bg-surface p-3 print:hidden">
         <select
           className={`${inputClass} min-w-[220px]`}
           value={selectedId}
@@ -502,7 +502,7 @@ export default function CustomerStatementPage() {
         {period === "custom" && (
           <>
             <input type="date" className={inputClass} value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
-            <span className="text-sm text-slate-400">to</span>
+            <span className="text-sm text-ink-muted">to</span>
             <input type="date" className={inputClass} value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
           </>
         )}
@@ -514,14 +514,14 @@ export default function CustomerStatementPage() {
         </select>
       </div>
 
-      {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="mb-4 rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>}
 
       {!customer ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-400">
+        <div className="rounded-xl border border-dashed border-ink-muted/40 bg-surface p-10 text-center text-sm text-ink-muted">
           Select a customer above to view their statement.
         </div>
       ) : loadingStatement ? (
-        <p className="py-8 text-center text-sm text-slate-400">Loading statement…</p>
+        <p className="py-8 text-center text-sm text-ink-muted">Loading statement…</p>
       ) : (
         <>
           {/* Summary cards */}
@@ -546,24 +546,24 @@ export default function CustomerStatementPage() {
           {/* Two-column info area */}
           <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-5 print:hidden">
             {/* Customer profile */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-3">
+            <div className="rounded-xl border border-hairline bg-surface p-5 lg:col-span-3">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-slate-900">{customer.name}</h3>
+                    <h3 className="text-lg font-bold text-ink">{customer.name}</h3>
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${accountStatus.classes}`}>
                       {accountStatus.label}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-ink-muted">
                     {customer.code}
                     {customer.gstin ? ` · GSTIN ${customer.gstin}` : ""}
                   </p>
                 </div>
-                <p className="text-xs text-slate-400">Generated {formatDate(today)}</p>
+                <p className="text-xs text-ink-muted">Generated {formatDate(today)}</p>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-6 border-t border-slate-100 pt-4 text-sm">
+              <div className="mt-4 grid grid-cols-2 gap-6 border-t border-hairline/50 pt-4 text-sm">
                 <div className="space-y-2">
                   <InfoRow label="Location" value={customer.address || "—"} />
                   <InfoRow label="Credit Terms" value={`Net ${customer.credit_days}`} />
@@ -578,8 +578,8 @@ export default function CustomerStatementPage() {
             </div>
 
             {/* AR insights */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">AR Insights</h3>
+            <div className="rounded-xl border border-hairline bg-surface p-5 lg:col-span-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">AR Insights</h3>
               <div className="mt-3 space-y-2 text-sm">
                 <InfoRow label="Unpaid invoices" value={String(unpaidCount)} />
                 <InfoRow label="Oldest unpaid invoice" value={oldestUnpaid ? `${oldestUnpaid.invoice_no} (due ${formatDate(oldestUnpaid.due_date)})` : "None"} />
@@ -591,32 +591,32 @@ export default function CustomerStatementPage() {
                 <InfoRow label="Suggested follow-up" value={overdueAmount > 0 ? "Due now" : "Not required"} />
               </div>
 
-              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Ageing breakdown</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-ink-muted">Ageing breakdown</p>
               <div className="mt-2 space-y-1.5">
-                <AgeingChip label="Current" value={ageingBuckets.current} total={outstandingBalance} colorClass="bg-slate-300" />
-                <AgeingChip label="1–30 days" value={ageingBuckets.d1_30} total={outstandingBalance} colorClass="bg-amber-400" />
-                <AgeingChip label="31–60 days" value={ageingBuckets.d31_60} total={outstandingBalance} colorClass="bg-orange-400" />
-                <AgeingChip label="61–90 days" value={ageingBuckets.d61_90} total={outstandingBalance} colorClass="bg-red-400" />
-                <AgeingChip label="90+ days" value={ageingBuckets.d90_plus} total={outstandingBalance} colorClass="bg-red-600" />
+                <AgeingChip label="Current" value={ageingBuckets.current} total={outstandingBalance} colorClass="bg-hairline" />
+                <AgeingChip label="1–30 days" value={ageingBuckets.d1_30} total={outstandingBalance} colorClass="bg-warning" />
+                <AgeingChip label="31–60 days" value={ageingBuckets.d31_60} total={outstandingBalance} colorClass="bg-warning" />
+                <AgeingChip label="61–90 days" value={ageingBuckets.d61_90} total={outstandingBalance} colorClass="bg-danger" />
+                <AgeingChip label="90+ days" value={ageingBuckets.d90_plus} total={outstandingBalance} colorClass="bg-danger" />
               </div>
             </div>
           </div>
 
           {/* Ledger card */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 print:border-0 print:p-0 print:shadow-none">
-            <div className="hidden items-start justify-between border-b border-slate-100 pb-4 print:flex">
+          <div className="rounded-xl border border-hairline bg-surface p-6 print:border-0 print:p-0 print:shadow-none">
+            <div className="hidden items-start justify-between border-b border-hairline/50 pb-4 print:flex">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">{customer.name}</h3>
-                <p className="text-sm text-slate-500">
+                <h3 className="text-lg font-bold text-ink">{customer.name}</h3>
+                <p className="text-sm text-ink-muted">
                   {customer.code}
                   {customer.gstin ? ` · GSTIN ${customer.gstin}` : ""}
                 </p>
               </div>
-              <p className="text-sm text-slate-500">Generated {formatDate(today)}</p>
+              <p className="text-sm text-ink-muted">Generated {formatDate(today)}</p>
             </div>
 
             {/* Statement metadata strip */}
-            <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg bg-slate-50 p-4 text-xs text-slate-600 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg bg-section p-4 text-xs text-ink-secondary sm:grid-cols-3 lg:grid-cols-6">
               <MetaItem label="Period" value={PERIOD_LABELS[period]} />
               <MetaItem label="From" value={statementFrom ? formatDate(statementFrom) : "—"} />
               <MetaItem label="To" value={formatDate(statementTo)} />
@@ -625,61 +625,61 @@ export default function CustomerStatementPage() {
               <MetaItem label="Closing Balance" value={formatMoney(closingBalance)} strong />
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <div className="overflow-x-auto rounded-xl border border-hairline">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="sticky top-0 z-[1]">
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                    <th className="px-4 py-3 font-semibold text-slate-600">Date</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600">Particulars</th>
-                    <th className="px-4 py-3 font-semibold text-slate-600">Ref</th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-600">Debit</th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-600">Credit</th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-600">Balance</th>
+                  <tr className="border-b border-hairline bg-section text-left">
+                    <th className="px-4 py-3 font-semibold text-ink-secondary">Date</th>
+                    <th className="px-4 py-3 font-semibold text-ink-secondary">Particulars</th>
+                    <th className="px-4 py-3 font-semibold text-ink-secondary">Ref</th>
+                    <th className="px-4 py-3 text-right font-semibold text-ink-secondary">Debit</th>
+                    <th className="px-4 py-3 text-right font-semibold text-ink-secondary">Credit</th>
+                    <th className="px-4 py-3 text-right font-semibold text-ink-secondary">Balance</th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayRows.map((r, idx) => (
                     <tr
                       key={r.id}
-                      className={`border-b border-slate-100 last:border-0 hover:bg-slate-50 ${
-                        r.id === "opening" ? "bg-slate-50/60 font-medium" : idx % 2 === 0 ? "" : "bg-slate-50/30"
+                      className={`border-b border-hairline/50 last:border-0 hover:bg-section ${
+                        r.id === "opening" ? "bg-section/60 font-medium" : idx % 2 === 0 ? "" : "bg-section/30"
                       }`}
                     >
-                      <td className="px-4 py-3 text-slate-700">{r.date ? formatDate(r.date) : "—"}</td>
-                      <td className="px-4 py-3 text-slate-700">
+                      <td className="px-4 py-3 text-ink-secondary">{r.date ? formatDate(r.date) : "—"}</td>
+                      <td className="px-4 py-3 text-ink-secondary">
                         <div className="flex items-center gap-2">
                           {r.id !== "opening" && <TypeBadge type={r.type} />}
                           <span>{r.particulars}</span>
                         </div>
-                        {r.note && <p className="mt-0.5 text-xs text-slate-400">{r.note}</p>}
+                        {r.note && <p className="mt-0.5 text-xs text-ink-muted">{r.note}</p>}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">{r.ref}</td>
-                      <td className="px-4 py-3 text-right text-slate-700">
-                        {r.debit ? formatMoney(r.debit) : <span className="text-slate-300">—</span>}
+                      <td className="px-4 py-3 text-ink-muted">{r.ref}</td>
+                      <td className="px-4 py-3 text-right text-ink-secondary">
+                        {r.debit ? formatMoney(r.debit) : <span className="text-ink-muted/60">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-700">
-                        {r.credit ? formatMoney(r.credit) : <span className="text-slate-300">—</span>}
+                      <td className="px-4 py-3 text-right text-ink-secondary">
+                        {r.credit ? formatMoney(r.credit) : <span className="text-ink-muted/60">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatMoney(r.balance)}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-ink">{formatMoney(r.balance)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-slate-200 bg-slate-50">
-                    <td className="px-4 py-3 font-semibold text-slate-700" colSpan={3}>
+                  <tr className="border-t border-hairline bg-section">
+                    <td className="px-4 py-3 font-semibold text-ink-secondary" colSpan={3}>
                       Totals for period
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-700">{formatMoney(totalDebit)}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-700">{formatMoney(totalCredit)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-900">{formatMoney(closingBalance)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-ink-secondary">{formatMoney(totalDebit)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-ink-secondary">{formatMoney(totalCredit)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-ink">{formatMoney(closingBalance)}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
             <div className="mt-4 flex items-center justify-end gap-2 text-sm">
-              <span className="text-slate-500">Closing balance (amount owed):</span>
-              <span className="text-lg font-bold text-slate-900">{formatMoney(closingBalance)}</span>
+              <span className="text-ink-muted">Closing balance (amount owed):</span>
+              <span className="text-lg font-bold text-ink">{formatMoney(closingBalance)}</span>
             </div>
           </div>
         </>
@@ -703,15 +703,15 @@ function SummaryCard({
 }) {
   return (
     <div
-      className={`rounded-xl border bg-white p-4 transition-shadow hover:shadow-sm ${
-        danger ? "border-red-200" : "border-slate-200"
+      className={`rounded-xl border bg-surface p-4 transition-shadow hover:shadow-sm ${
+        danger ? "border-danger-border" : "border-hairline"
       }`}
     >
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
         <span>{icon}</span>
         {label}
       </div>
-      <p className={`mt-2 text-lg font-semibold ${danger ? "text-red-600" : emphasis ? "text-slate-900" : "text-slate-700"}`}>
+      <p className={`mt-2 text-lg font-semibold ${danger ? "text-danger" : emphasis ? "text-ink" : "text-ink-secondary"}`}>
         {value}
       </p>
     </div>
@@ -721,8 +721,8 @@ function SummaryCard({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-slate-400">{label}</span>
-      <span className="text-right font-medium text-slate-700">{value}</span>
+      <span className="text-ink-muted">{label}</span>
+      <span className="text-right font-medium text-ink-secondary">{value}</span>
     </div>
   );
 }
@@ -730,8 +730,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 function MetaItem({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div>
-      <p className="uppercase tracking-wide text-slate-400">{label}</p>
-      <p className={`mt-0.5 ${strong ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>{value}</p>
+      <p className="uppercase tracking-wide text-ink-muted">{label}</p>
+      <p className={`mt-0.5 ${strong ? "font-semibold text-ink" : "font-medium text-ink-secondary"}`}>{value}</p>
     </div>
   );
 }
@@ -750,11 +750,11 @@ function AgeingChip({
   const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span className="w-16 flex-none text-slate-500">{label}</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+      <span className="w-16 flex-none text-ink-muted">{label}</span>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sidebar">
         <div className={`h-full rounded-full ${colorClass}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="w-24 flex-none text-right font-medium text-slate-700">{formatMoney(value)}</span>
+      <span className="w-24 flex-none text-right font-medium text-ink-secondary">{formatMoney(value)}</span>
     </div>
   );
 }
@@ -764,7 +764,7 @@ function TypeBadge({ type }: { type: TxnType }) {
   return (
     <span
       className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-        isInvoice ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+        isInvoice ? "bg-info-bg text-info" : "bg-success-bg text-success"
       }`}
     >
       {isInvoice ? "Inv" : "Rcpt"}

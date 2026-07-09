@@ -61,7 +61,7 @@ export function StepUpload({
         }}
         onClick={() => inputRef.current?.click()}
         className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 text-center transition-colors ${
-          dragOver ? "border-brand bg-brand/5" : "border-slate-300 bg-white hover:border-brand/50"
+          dragOver ? "border-brand bg-brand/5" : "border-ink-muted/40 bg-surface hover:border-brand/50"
         }`}
       >
         <input
@@ -75,60 +75,60 @@ export function StepUpload({
             e.target.value = "";
           }}
         />
-        <p className="text-sm font-semibold text-slate-700">Drag & drop a CSV file here, or click to browse</p>
-        <p className="mt-1 text-xs text-slate-400">CSV only · UTF-8 · large files are streamed so the page stays responsive</p>
+        <p className="text-sm font-semibold text-ink-secondary">Drag & drop a CSV file here, or click to browse</p>
+        <p className="mt-1 text-xs text-ink-muted">CSV only · UTF-8 · large files are streamed so the page stays responsive</p>
         {loading && <p className="mt-4 text-sm text-brand">Reading file… {progressRows.toLocaleString()} rows so far</p>}
       </div>
 
-      {fileError && <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{fileError}</p>}
+      {fileError && <p className="rounded-lg bg-danger-bg px-4 py-3 text-sm text-danger">{fileError}</p>}
 
       {parsed && (
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-xl border border-hairline bg-surface p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-bold text-slate-900">{parsed.fileName}</p>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="text-sm font-bold text-ink">{parsed.fileName}</p>
+              <p className="mt-0.5 text-xs text-ink-muted">
                 {formatBytes(parsed.fileSizeBytes)} · {parsed.rowCount.toLocaleString()} rows · {parsed.headers.length} columns
               </p>
             </div>
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section"
             >
               Replace file
             </button>
           </div>
 
           {parsed.truncated && (
-            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <p className="mt-3 rounded-lg bg-warning-bg px-3 py-2 text-xs text-warning">
               This file has more rows than the 100,000-row limit — only the first {parsed.rowCount.toLocaleString()} were loaded.
             </p>
           )}
 
           <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
               Preview — first {Math.min(50, parsed.rows.length).toLocaleString()} of {parsed.rowCount.toLocaleString()} rows
             </p>
-            <div className="max-h-80 overflow-auto rounded-lg border border-slate-200">
+            <div className="max-h-80 overflow-auto rounded-lg border border-hairline">
               <table className="w-full min-w-max text-xs">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-slate-100 text-left">
-                    <th className="whitespace-nowrap border-b border-slate-200 px-3 py-2 font-semibold text-slate-500">#</th>
+                  <tr className="bg-sidebar text-left">
+                    <th className="whitespace-nowrap border-b border-hairline px-3 py-2 font-semibold text-ink-muted">#</th>
                     {parsed.headers.map((h) => (
-                      <th key={h} className="whitespace-nowrap border-b border-slate-200 px-3 py-2 font-semibold text-slate-600">
-                        {h || <em className="text-slate-400">(blank)</em>}
+                      <th key={h} className="whitespace-nowrap border-b border-hairline px-3 py-2 font-semibold text-ink-secondary">
+                        {h || <em className="text-ink-muted">(blank)</em>}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {parsed.rows.slice(0, 50).map((row, i) => (
-                    <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                      <td className="whitespace-nowrap px-3 py-1.5 text-slate-400">{i + 1}</td>
+                    <tr key={i} className="border-b border-hairline/50 last:border-0 hover:bg-section">
+                      <td className="whitespace-nowrap px-3 py-1.5 text-ink-muted">{i + 1}</td>
                       {parsed.headers.map((h) => (
-                        <td key={h} className="max-w-[16rem] truncate whitespace-nowrap px-3 py-1.5 text-slate-700">
-                          {row[h] || <span className="text-slate-300">—</span>}
+                        <td key={h} className="max-w-[16rem] truncate whitespace-nowrap px-3 py-1.5 text-ink-secondary">
+                          {row[h] || <span className="text-ink-muted/60">—</span>}
                         </td>
                       ))}
                     </tr>
@@ -137,7 +137,7 @@ export function StepUpload({
               </table>
             </div>
             {parsed.rowCount > 50 && (
-              <p className="mt-1.5 text-xs text-slate-400">…and {(parsed.rowCount - 50).toLocaleString()} more rows, not shown here — they'll all be validated in Step 4.</p>
+              <p className="mt-1.5 text-xs text-ink-muted">…and {(parsed.rowCount - 50).toLocaleString()} more rows, not shown here — they'll all be validated in Step 4.</p>
             )}
           </div>
 
@@ -147,7 +147,7 @@ export function StepUpload({
                 <p
                   key={i}
                   className={`rounded-lg px-3 py-2 text-xs ${
-                    issue.level === "error" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-800"
+                    issue.level === "error" ? "bg-danger-bg text-danger" : "bg-warning-bg text-warning"
                   }`}
                 >
                   {issue.level === "error" ? "⚠ " : "ⓘ "}
@@ -159,7 +159,7 @@ export function StepUpload({
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      <div className="rounded-xl border border-hairline bg-section p-4 text-sm text-ink-secondary">
         Not sure of the format?{" "}
         <button
           type="button"
@@ -177,7 +177,7 @@ export function StepUpload({
       </div>
 
       <div className="flex justify-between">
-        <button type="button" onClick={onBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100">
+        <button type="button" onClick={onBack} className="rounded-lg px-4 py-2.5 text-sm font-medium text-ink-secondary hover:bg-section">
           Back
         </button>
         <button

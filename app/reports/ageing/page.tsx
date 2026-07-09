@@ -19,11 +19,11 @@ const BUCKET_LABELS: Record<Bucket, string> = {
   d90_plus: "90+ Days",
 };
 const BUCKET_COLORS: Record<Bucket, string> = {
-  current: "bg-emerald-500",
+  current: "bg-success",
   d1_30: "bg-lime-400",
-  d31_60: "bg-amber-400",
-  d61_90: "bg-orange-500",
-  d90_plus: "bg-red-600",
+  d31_60: "bg-warning",
+  d61_90: "bg-warning",
+  d90_plus: "bg-danger",
 };
 const BUCKET_ORDER: Bucket[] = ["current", "d1_30", "d31_60", "d61_90", "d90_plus"];
 
@@ -256,10 +256,10 @@ export default function AgeingReportPage() {
   const maxDefaulterOutstanding = Math.max(...topDefaulters.map((r) => r.outstanding), 1);
 
   const PRIORITY_BADGE: Record<CustomerAgeing["priority"], string> = {
-    Critical: "bg-red-50 text-red-700",
-    High: "bg-orange-50 text-orange-700",
-    Medium: "bg-amber-50 text-amber-700",
-    Low: "bg-emerald-50 text-emerald-700",
+    Critical: "bg-danger-bg text-danger",
+    High: "bg-warning-bg text-warning",
+    Medium: "bg-warning-bg text-warning",
+    Low: "bg-success-bg text-success",
   };
 
   if (!isConfigured) {
@@ -273,9 +273,9 @@ export default function AgeingReportPage() {
 
   return (
     <div className="pb-24">
-      <p className="mb-1 text-xs font-medium text-slate-400 print:hidden">
+      <p className="mb-1 text-xs font-medium text-ink-muted print:hidden">
         Dashboard <span className="mx-1">/</span> Accounts Receivable <span className="mx-1">/</span>{" "}
-        <span className="text-slate-600">AR Ageing Report</span>
+        <span className="text-ink-secondary">AR Ageing Report</span>
       </p>
       <div className="print:hidden">
         <PageHeader
@@ -283,10 +283,10 @@ export default function AgeingReportPage() {
           subtitle="Every customer's outstanding balance, bucketed by how overdue it is."
           action={
             <div className="flex gap-2">
-              <button onClick={loadAll} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <button onClick={loadAll} className="rounded-lg border border-ink-muted/40 bg-surface px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section">
                 Refresh
               </button>
-              <button onClick={exportCsv} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <button onClick={exportCsv} className="rounded-lg border border-ink-muted/40 bg-surface px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section">
                 Export CSV
               </button>
               <button onClick={() => window.print()} className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark">
@@ -298,7 +298,7 @@ export default function AgeingReportPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Loading ageing report…</p>
+        <p className="text-sm text-ink-muted">Loading ageing report…</p>
       ) : (
         <>
           {/* KPI row */}
@@ -315,11 +315,11 @@ export default function AgeingReportPage() {
 
           {/* Insights */}
           {insights.length > 0 && (
-            <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm print:hidden">
-              <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Insights</h3>
+            <div className="mb-6 rounded-2xl border border-hairline bg-surface p-5 shadow-sm print:hidden">
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-muted">Insights</h3>
               <ul className="space-y-1.5">
                 {insights.map((line, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-slate-700">
+                  <li key={i} className="flex gap-2 text-sm text-ink-secondary">
                     <span className="text-brand">•</span>
                     {line}
                   </li>
@@ -352,7 +352,7 @@ export default function AgeingReportPage() {
                     key={f.key}
                     onClick={() => setQuickFilter(f.key)}
                     className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                      quickFilter === f.key ? "bg-brand text-white" : "border border-slate-300 text-slate-600 hover:bg-slate-50"
+                      quickFilter === f.key ? "bg-brand text-white" : "border border-ink-muted/40 text-ink-secondary hover:bg-section"
                     }`}
                   >
                     {f.label}
@@ -361,26 +361,26 @@ export default function AgeingReportPage() {
               </div>
 
               {/* Main grid */}
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="overflow-x-auto rounded-2xl border border-hairline bg-surface shadow-sm">
                 <table className="w-full min-w-[900px] text-sm">
-                  <thead className="sticky top-0 bg-slate-50">
-                    <tr className="border-b border-slate-200 text-left">
-                      <th className="px-4 py-3 font-semibold text-slate-600"></th>
-                      <th className="px-4 py-3 font-semibold text-slate-600">Customer</th>
-                      <th className="px-4 py-3 text-right font-semibold text-slate-600">Outstanding</th>
+                  <thead className="sticky top-0 bg-section">
+                    <tr className="border-b border-hairline text-left">
+                      <th className="px-4 py-3 font-semibold text-ink-secondary"></th>
+                      <th className="px-4 py-3 font-semibold text-ink-secondary">Customer</th>
+                      <th className="px-4 py-3 text-right font-semibold text-ink-secondary">Outstanding</th>
                       {BUCKET_ORDER.map((b) => (
-                        <th key={b} className="px-3 py-3 text-right font-semibold text-slate-600">
+                        <th key={b} className="px-3 py-3 text-right font-semibold text-ink-secondary">
                           {BUCKET_LABELS[b]}
                         </th>
                       ))}
-                      <th className="px-3 py-3 text-right font-semibold text-slate-600">Days Overdue</th>
-                      <th className="px-3 py-3 font-semibold text-slate-600">Priority</th>
+                      <th className="px-3 py-3 text-right font-semibold text-ink-secondary">Days Overdue</th>
+                      <th className="px-3 py-3 font-semibold text-ink-secondary">Priority</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                        <td colSpan={9} className="px-4 py-10 text-center text-ink-muted">
                           No customers match these filters.
                         </td>
                       </tr>
@@ -392,29 +392,29 @@ export default function AgeingReportPage() {
                           <Fragment key={row.customer.id}>
                             <tr
                               onClick={() => setExpandedId(expanded ? null : row.customer.id)}
-                              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50"
+                              className="cursor-pointer border-b border-hairline/50 hover:bg-section"
                             >
-                              <td className="px-4 py-3 text-slate-400">{expanded ? "▾" : "▸"}</td>
+                              <td className="px-4 py-3 text-ink-muted">{expanded ? "▾" : "▸"}</td>
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand/10 text-xs font-bold text-brand">
                                     {row.customer.name.slice(0, 1).toUpperCase()}
                                   </span>
                                   <div>
-                                    <p className="font-medium text-slate-800">{row.customer.name}</p>
-                                    <p className="text-xs text-slate-400">
+                                    <p className="font-medium text-ink">{row.customer.name}</p>
+                                    <p className="text-xs text-ink-muted">
                                       {row.customer.code} · {Math.round(utilisation * 100)}% of limit
                                     </p>
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatMoney(row.outstanding)}</td>
+                              <td className="px-4 py-3 text-right font-semibold text-ink">{formatMoney(row.outstanding)}</td>
                               {BUCKET_ORDER.map((b) => (
-                                <td key={b} className="px-3 py-3 text-right text-slate-600">
+                                <td key={b} className="px-3 py-3 text-right text-ink-secondary">
                                   {row.buckets[b] > 0 ? formatMoney(row.buckets[b]) : "—"}
                                 </td>
                               ))}
-                              <td className="px-3 py-3 text-right text-slate-600">{Math.max(0, row.maxDaysOverdue)}</td>
+                              <td className="px-3 py-3 text-right text-ink-secondary">{Math.max(0, row.maxDaysOverdue)}</td>
                               <td className="px-3 py-3">
                                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORITY_BADGE[row.priority]}`}>
                                   {row.priority}
@@ -422,17 +422,17 @@ export default function AgeingReportPage() {
                               </td>
                             </tr>
                             {expanded && (
-                              <tr className="border-b border-slate-100 bg-slate-50/60">
+                              <tr className="border-b border-hairline/50 bg-section/60">
                                 <td colSpan={9} className="px-6 py-4">
                                   <div className="mb-2 flex items-center justify-between">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Open Invoices</p>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Open Invoices</p>
                                     <Link href={`/reports/statement?customer=${row.customer.id}`} className="text-xs font-medium text-brand hover:underline">
                                       View Full Statement →
                                     </Link>
                                   </div>
                                   <table className="w-full text-xs">
                                     <thead>
-                                      <tr className="text-left text-slate-500">
+                                      <tr className="text-left text-ink-muted">
                                         <th className="py-1 pr-3">Invoice</th>
                                         <th className="py-1 pr-3">Invoice Date</th>
                                         <th className="py-1 pr-3">Due Date</th>
@@ -442,14 +442,14 @@ export default function AgeingReportPage() {
                                     </thead>
                                     <tbody>
                                       {row.openInvoices.map((oi) => (
-                                        <tr key={oi.invoice.id} className="border-t border-slate-200">
-                                          <td className="py-1.5 pr-3 font-medium text-slate-700">{oi.invoice.invoice_no}</td>
-                                          <td className="py-1.5 pr-3 text-slate-600">{formatDate(oi.invoice.invoice_date)}</td>
-                                          <td className="py-1.5 pr-3 text-slate-600">{formatDate(oi.invoice.due_date)}</td>
-                                          <td className="py-1.5 pr-3 text-right text-slate-700">{formatMoney(oi.outstanding)}</td>
+                                        <tr key={oi.invoice.id} className="border-t border-hairline">
+                                          <td className="py-1.5 pr-3 font-medium text-ink-secondary">{oi.invoice.invoice_no}</td>
+                                          <td className="py-1.5 pr-3 text-ink-secondary">{formatDate(oi.invoice.invoice_date)}</td>
+                                          <td className="py-1.5 pr-3 text-ink-secondary">{formatDate(oi.invoice.due_date)}</td>
+                                          <td className="py-1.5 pr-3 text-right text-ink-secondary">{formatMoney(oi.outstanding)}</td>
                                           <td className="py-1.5">
                                             <span className={`inline-block h-2 w-2 rounded-full ${BUCKET_COLORS[oi.bucket]}`} />{" "}
-                                            <span className="text-slate-500">{BUCKET_LABELS[oi.bucket]}</span>
+                                            <span className="text-ink-muted">{BUCKET_LABELS[oi.bucket]}</span>
                                           </td>
                                         </tr>
                                       ))}
@@ -468,16 +468,16 @@ export default function AgeingReportPage() {
 
               {/* Charts */}
               <div className="grid grid-cols-1 gap-6 print:hidden sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-4 text-xs font-bold uppercase tracking-wide text-slate-500">Outstanding by Age Bucket</h3>
+                <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-sm">
+                  <h3 className="mb-4 text-xs font-bold uppercase tracking-wide text-ink-muted">Outstanding by Age Bucket</h3>
                   <div className="space-y-3">
                     {BUCKET_ORDER.map((b) => (
                       <div key={b}>
-                        <div className="mb-1 flex justify-between text-xs text-slate-500">
+                        <div className="mb-1 flex justify-between text-xs text-ink-muted">
                           <span>{BUCKET_LABELS[b]}</span>
                           <span>{formatMoney(totals.buckets[b])}</span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-100">
+                        <div className="h-2 w-full rounded-full bg-sidebar">
                           <div
                             className={`h-2 rounded-full ${BUCKET_COLORS[b]}`}
                             style={{ width: `${(totals.buckets[b] / maxBucketTotal) * 100}%` }}
@@ -488,16 +488,16 @@ export default function AgeingReportPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-4 text-xs font-bold uppercase tracking-wide text-slate-500">Top 10 Defaulters</h3>
+                <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-sm">
+                  <h3 className="mb-4 text-xs font-bold uppercase tracking-wide text-ink-muted">Top 10 Defaulters</h3>
                   <div className="space-y-2.5">
                     {topDefaulters.map((r) => (
                       <div key={r.customer.id}>
-                        <div className="mb-1 flex justify-between text-xs text-slate-500">
+                        <div className="mb-1 flex justify-between text-xs text-ink-muted">
                           <span className="truncate">{r.customer.name}</span>
                           <span>{formatMoney(r.outstanding)}</span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-100">
+                        <div className="h-2 w-full rounded-full bg-sidebar">
                           <div className="h-2 rounded-full bg-brand" style={{ width: `${(r.outstanding / maxDefaulterOutstanding) * 100}%` }} />
                         </div>
                       </div>
@@ -509,23 +509,23 @@ export default function AgeingReportPage() {
 
             {/* RIGHT sidebar */}
             <div className="space-y-6 print:hidden lg:col-span-3">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Today's Collection</h3>
-                <p className="text-2xl font-bold text-slate-900">{formatMoney(todaysCollection)}</p>
-                <p className="mt-1 text-xs text-slate-400">{receipts.filter((r) => r.receipt_date === new Date().toISOString().slice(0, 10)).length} receipt(s) recorded today</p>
+              <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-sm">
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-muted">Today's Collection</h3>
+                <p className="text-2xl font-bold text-ink">{formatMoney(todaysCollection)}</p>
+                <p className="mt-1 text-xs text-ink-muted">{receipts.filter((r) => r.receipt_date === new Date().toISOString().slice(0, 10)).length} receipt(s) recorded today</p>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Needs Follow-up</h3>
+              <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-sm">
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-muted">Needs Follow-up</h3>
                 {followUpList.length === 0 ? (
-                  <p className="text-sm text-slate-400">Nobody critical right now.</p>
+                  <p className="text-sm text-ink-muted">Nobody critical right now.</p>
                 ) : (
                   <ul className="space-y-2">
                     {followUpList.map((r) => (
                       <li key={r.customer.id} className="flex items-center justify-between text-sm">
                         <div>
-                          <p className="font-medium text-slate-700">{r.customer.name}</p>
-                          <p className="text-xs text-slate-400">{Math.max(0, r.maxDaysOverdue)} days overdue</p>
+                          <p className="font-medium text-ink-secondary">{r.customer.name}</p>
+                          <p className="text-xs text-ink-muted">{Math.max(0, r.maxDaysOverdue)} days overdue</p>
                         </div>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORITY_BADGE[r.priority]}`}>{r.priority}</span>
                       </li>
@@ -534,19 +534,19 @@ export default function AgeingReportPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Recent Payments</h3>
+              <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-sm">
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-muted">Recent Payments</h3>
                 {recentPayments.length === 0 ? (
-                  <p className="text-sm text-slate-400">No receipts yet.</p>
+                  <p className="text-sm text-ink-muted">No receipts yet.</p>
                 ) : (
                   <ul className="space-y-2">
                     {recentPayments.map((r) => (
                       <li key={r.id} className="flex items-center justify-between text-sm">
                         <div>
-                          <p className="font-medium text-slate-700">{customers.find((c) => c.id === r.customer_id)?.name ?? "—"}</p>
-                          <p className="text-xs text-slate-400">{formatDate(r.receipt_date)}</p>
+                          <p className="font-medium text-ink-secondary">{customers.find((c) => c.id === r.customer_id)?.name ?? "—"}</p>
+                          <p className="text-xs text-ink-muted">{formatDate(r.receipt_date)}</p>
                         </div>
-                        <span className="font-semibold text-slate-800">{formatMoney(Number(r.amount))}</span>
+                        <span className="font-semibold text-ink">{formatMoney(Number(r.amount))}</span>
                       </li>
                     ))}
                   </ul>
@@ -558,27 +558,27 @@ export default function AgeingReportPage() {
       )}
 
       {/* Sticky live summary bar */}
-      <div className="fixed bottom-0 left-60 right-0 border-t border-slate-200 bg-white/95 px-8 py-4 backdrop-blur print:hidden">
+      <div className="fixed bottom-0 left-60 right-0 border-t border-hairline bg-surface/95 px-8 py-4 backdrop-blur print:hidden">
         <div className="flex flex-wrap gap-6 text-sm">
           <div>
-            <span className="text-slate-400">Customers </span>
-            <span className="font-semibold text-slate-800">{liveSummary.customers}</span>
+            <span className="text-ink-muted">Customers </span>
+            <span className="font-semibold text-ink">{liveSummary.customers}</span>
           </div>
           <div>
-            <span className="text-slate-400">Outstanding </span>
-            <span className="font-semibold text-slate-800">{formatMoney(liveSummary.outstanding)}</span>
+            <span className="text-ink-muted">Outstanding </span>
+            <span className="font-semibold text-ink">{formatMoney(liveSummary.outstanding)}</span>
           </div>
           <div>
-            <span className="text-slate-400">Current </span>
-            <span className="font-semibold text-slate-800">{formatMoney(liveSummary.current)}</span>
+            <span className="text-ink-muted">Current </span>
+            <span className="font-semibold text-ink">{formatMoney(liveSummary.current)}</span>
           </div>
           <div>
-            <span className="text-slate-400">Overdue </span>
-            <span className="font-semibold text-red-600">{formatMoney(liveSummary.overdue)}</span>
+            <span className="text-ink-muted">Overdue </span>
+            <span className="font-semibold text-danger">{formatMoney(liveSummary.overdue)}</span>
           </div>
           <div>
-            <span className="text-slate-400">Overdue Customers </span>
-            <span className="font-semibold text-slate-800">{liveSummary.overdueCount}</span>
+            <span className="text-ink-muted">Overdue Customers </span>
+            <span className="font-semibold text-ink">{liveSummary.overdueCount}</span>
           </div>
         </div>
       </div>

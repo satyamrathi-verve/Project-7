@@ -34,9 +34,9 @@ function sanitizeFileName(name: string) {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  sent: "bg-emerald-50 text-emerald-700",
-  opened: "bg-blue-50 text-blue-700",
-  failed: "bg-red-50 text-red-700",
+  sent: "bg-success-bg text-success",
+  opened: "bg-info-bg text-info",
+  failed: "bg-danger-bg text-danger",
 };
 
 export function EmailInvoiceModal({
@@ -166,22 +166,22 @@ Accounts Team`,
       onClick={closeWithAnim}
     >
       <div
-        className={`my-6 w-full max-w-2xl rounded-2xl bg-white shadow-2xl transition-all duration-150 ${
+        className={`my-6 w-full max-w-2xl rounded-2xl bg-surface shadow-2xl transition-all duration-150 ${
           mounted ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-hairline px-6 py-4">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Email Invoice</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="text-lg font-bold text-ink">Email Invoice</h3>
+            <p className="text-xs text-ink-muted">
               {invoice.invoice_no} · {customerName}
             </p>
           </div>
           <button
             onClick={closeWithAnim}
-            className="rounded-lg px-2 py-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-lg px-2 py-1 text-ink-muted hover:bg-section hover:text-ink-secondary"
             aria-label="Close"
           >
             ✕
@@ -191,11 +191,11 @@ Accounts Team`,
         {result?.status === "sent" ? (
           // Success state
           <div className="px-6 py-10 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-2xl">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-bg text-2xl">
               ✓
             </div>
-            <p className="mt-4 text-base font-semibold text-slate-900">{result.message}</p>
-            <p className="mt-1 text-sm text-slate-500">Logged to this invoice&apos;s email history.</p>
+            <p className="mt-4 text-base font-semibold text-ink">{result.message}</p>
+            <p className="mt-1 text-sm text-ink-muted">Logged to this invoice&apos;s email history.</p>
             <button
               onClick={closeWithAnim}
               className="mt-6 rounded-lg bg-brand px-5 py-2 text-sm font-medium text-white hover:bg-brand-dark"
@@ -206,7 +206,7 @@ Accounts Team`,
         ) : (
           <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
             {result?.status === "failed" && (
-              <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p className="mb-4 rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">
                 Couldn&apos;t send: {result.message}
               </p>
             )}
@@ -238,10 +238,10 @@ Accounts Team`,
 
             {/* Attachments */}
             <div className="mt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Attachments</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Attachments</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700">
-                  <span className="text-red-500">📄</span>
+                <span className="inline-flex items-center gap-2 rounded-lg border border-hairline bg-section px-3 py-1.5 text-sm text-ink-secondary">
+                  <span className="text-danger">📄</span>
                   {attachmentName}
                   <a
                     href={`/invoices/${invoice.id}/print`}
@@ -256,17 +256,17 @@ Accounts Team`,
             </div>
 
             {/* Pay Now preview */}
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mt-4 rounded-xl border border-hairline bg-section p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-slate-800">Secure payment link</p>
-                  <p className="text-xs text-slate-500">Recipient can pay {money(Number(invoice.total))} online — the invoice auto-settles.</p>
+                  <p className="text-sm font-medium text-ink">Secure payment link</p>
+                  <p className="text-xs text-ink-muted">Recipient can pay {money(Number(invoice.total))} online — the invoice auto-settles.</p>
                 </div>
                 <a
                   href={payLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                  className="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success"
                 >
                   Pay Now
                 </a>
@@ -275,15 +275,15 @@ Accounts Team`,
 
             {/* Email history */}
             {history.length > 0 && (
-              <div className="mt-6 border-t border-slate-200 pt-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Email history</p>
+              <div className="mt-6 border-t border-hairline pt-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Email history</p>
                 <ul className="mt-2 space-y-2">
                   {history.map((h) => (
                     <li key={h.id} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="truncate text-slate-600">{h.subject}</span>
+                      <span className="truncate text-ink-secondary">{h.subject}</span>
                       <span className="flex flex-none items-center gap-2">
-                        <span className="text-xs text-slate-400">{formatDate(h.sent_at)}</span>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_BADGE[h.status] ?? "bg-slate-100 text-slate-600"}`}>
+                        <span className="text-xs text-ink-muted">{formatDate(h.sent_at)}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_BADGE[h.status] ?? "bg-sidebar text-ink-secondary"}`}>
                           {h.status}
                         </span>
                       </span>
@@ -297,10 +297,10 @@ Accounts Team`,
 
         {/* Footer actions */}
         {result?.status !== "sent" && (
-          <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+          <div className="flex justify-end gap-3 border-t border-hairline px-6 py-4">
             <button
               onClick={closeWithAnim}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section"
             >
               Cancel
             </button>

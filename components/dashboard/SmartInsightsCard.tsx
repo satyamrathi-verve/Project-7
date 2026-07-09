@@ -35,7 +35,7 @@ function SmartInsightsCardImpl({ insights }: { insights: DashboardInsight[] }) {
       icon={<span aria-hidden>✨</span>}
       title="Smart Insights"
       subtitle="What changed, and what to do next"
-      className="border-violet-100 bg-gradient-to-br from-violet-50/50 to-surface"
+      className="border-info/20 bg-gradient-to-br from-info/[0.06] to-surface"
     >
       {visible.length === 0 ? (
         <p className="text-sm text-ink-muted">
@@ -59,7 +59,7 @@ function SmartInsightsCardImpl({ insights }: { insights: DashboardInsight[] }) {
                   onClick={() => setDismissed((prev) => new Set(prev).add(i))}
                   aria-label={`Dismiss insight: ${insight.title}`}
                   title="Dismiss"
-                  className="flex-none rounded p-1 text-ink-muted opacity-0 transition-opacity duration-150 hover:bg-black/[0.05] hover:text-ink focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 group-hover/insight:opacity-100"
+                  className="flex-none rounded p-1 text-ink-muted opacity-0 transition-opacity duration-150 hover:bg-ink/[0.06] hover:text-ink focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 group-hover/insight:opacity-100"
                 >
                   ✕
                 </button>

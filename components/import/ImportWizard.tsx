@@ -227,13 +227,13 @@ export function ImportWizard() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs">
         {currentUser ? (
-          <span className="text-slate-500">
-            Importing as <span className="font-semibold text-slate-700">{currentUser.name}</span> — recorded automatically in Import History
+          <span className="text-ink-muted">
+            Importing as <span className="font-semibold text-ink-secondary">{currentUser.name}</span> — recorded automatically in Import History
           </span>
         ) : (
-          <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-amber-800">
+          <span className="rounded-lg bg-warning-bg px-3 py-1.5 text-warning">
             You're not signed in — this import will be logged as "Unknown user".{" "}
-            <Link href="/signin" className="font-medium underline hover:text-amber-900">
+            <Link href="/signin" className="font-medium underline hover:text-warning">
               Sign in
             </Link>{" "}
             to have it attributed to you.
@@ -243,7 +243,7 @@ export function ImportWizard() {
 
       <Stepper current={step} furthest={furthest} onJump={goTo} />
 
-      {runError && <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{runError}</p>}
+      {runError && <p className="mb-4 rounded-lg bg-danger-bg px-4 py-3 text-sm text-danger">{runError}</p>}
 
       {step === 1 && <StepChooseType entity={entity} mode={mode} onChange={handleChooseType} onNext={() => goTo(2)} />}
 
@@ -271,7 +271,7 @@ export function ImportWizard() {
       )}
 
       {step === 3 && checkingDb && (
-        <p className="mt-4 text-center text-sm text-slate-400">Checking existing records in Supabase…</p>
+        <p className="mt-4 text-center text-sm text-ink-muted">Checking existing records in Supabase…</p>
       )}
 
       {step === 4 && entityConfig && (

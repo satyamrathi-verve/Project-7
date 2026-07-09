@@ -25,7 +25,7 @@ function ActivityFeedCardImpl({ events }: { events: ActivityEvent[] }) {
       ) : (
         <ol className="relative ml-3.5 border-l-2 border-hairline">
           {events.map((e, i) => (
-            <li key={i} className="group relative mb-5 rounded-r-lg pb-0.5 pl-5 pr-2 transition-colors duration-150 last:mb-0 hover:bg-black/[0.015]">
+            <li key={i} className="group relative mb-5 rounded-r-lg pb-0.5 pl-5 pr-2 transition-colors duration-150 last:mb-0 hover:bg-ink/[0.015]">
               <span
                 className={`absolute -left-[15px] top-0 flex h-7 w-7 items-center justify-center rounded-full text-sm ring-4 ring-surface transition-transform duration-200 group-hover:scale-110 ${e.iconClass}`}
               >

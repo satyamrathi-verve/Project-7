@@ -144,13 +144,13 @@ export default function PayInvoicePage() {
   }
 
   if (loading) {
-    return <div className="mx-auto max-w-md py-16 text-center text-sm text-slate-400">Loading payment…</div>;
+    return <div className="mx-auto max-w-md py-16 text-center text-sm text-ink-muted">Loading payment…</div>;
   }
 
   if (error && !data) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>
+        <p className="rounded-xl border border-danger-border bg-danger-bg p-4 text-sm text-danger">{error}</p>
       </div>
     );
   }
@@ -162,12 +162,12 @@ export default function PayInvoicePage() {
 
   return (
     <div className="mx-auto max-w-md py-10">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xl">
         {/* Gateway header */}
         <div className="bg-brand px-6 py-5 text-white">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">{company?.name ?? "Secure Checkout"}</span>
-            <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+            <span className="rounded-full bg-surface/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
               Demo Secure Pay
             </span>
           </div>
@@ -178,12 +178,12 @@ export default function PayInvoicePage() {
         <div className="px-6 py-6">
           {done ? (
             <div className="text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-2xl">✓</div>
-              <p className="mt-4 text-lg font-bold text-slate-900">Payment successful</p>
-              <p className="mt-1 text-sm text-slate-500">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-bg text-2xl">✓</div>
+              <p className="mt-4 text-lg font-bold text-ink">Payment successful</p>
+              <p className="mt-1 text-sm text-ink-muted">
                 {money(done.amount)} received · Receipt {done.receiptNo}
               </p>
-              <p className="mt-1 text-sm text-slate-500">Invoice {invoice.invoice_no} is now marked Paid.</p>
+              <p className="mt-1 text-sm text-ink-muted">Invoice {invoice.invoice_no} is now marked Paid.</p>
               <Link
                 href={`/invoices/${invoice.id}/print`}
                 className="mt-6 inline-block rounded-lg bg-brand px-5 py-2 text-sm font-medium text-white hover:bg-brand-dark"
@@ -193,12 +193,12 @@ export default function PayInvoicePage() {
             </div>
           ) : alreadyPaid ? (
             <div className="text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-2xl">✓</div>
-              <p className="mt-4 text-lg font-bold text-slate-900">Already paid</p>
-              <p className="mt-1 text-sm text-slate-500">There&apos;s nothing outstanding on this invoice.</p>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success-bg text-2xl">✓</div>
+              <p className="mt-4 text-lg font-bold text-ink">Already paid</p>
+              <p className="mt-1 text-sm text-ink-muted">There&apos;s nothing outstanding on this invoice.</p>
               <Link
                 href={`/invoices/${invoice.id}/print`}
-                className="mt-6 inline-block rounded-lg border border-slate-300 px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="mt-6 inline-block rounded-lg border border-ink-muted/40 px-5 py-2 text-sm font-medium text-ink-secondary hover:bg-section"
               >
                 View invoice
               </Link>
@@ -207,29 +207,29 @@ export default function PayInvoicePage() {
             <>
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Billed to</dt>
-                  <dd className="font-medium text-slate-800">{customer?.name ?? "—"}</dd>
+                  <dt className="text-ink-muted">Billed to</dt>
+                  <dd className="font-medium text-ink">{customer?.name ?? "—"}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Invoice</dt>
-                  <dd className="text-slate-800">{invoice.invoice_no}</dd>
+                  <dt className="text-ink-muted">Invoice</dt>
+                  <dd className="text-ink">{invoice.invoice_no}</dd>
                 </div>
-                <div className="flex items-baseline justify-between border-t border-slate-200 pt-3">
-                  <dt className="text-slate-500">Amount due</dt>
-                  <dd className="text-2xl font-bold text-slate-900">{money(outstanding)}</dd>
+                <div className="flex items-baseline justify-between border-t border-hairline pt-3">
+                  <dt className="text-ink-muted">Amount due</dt>
+                  <dd className="text-2xl font-bold text-ink">{money(outstanding)}</dd>
                 </div>
               </dl>
 
-              {error && <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+              {error && <p className="mt-4 rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>}
 
               <button
                 onClick={handlePay}
                 disabled={processing}
-                className="mt-6 w-full rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                className="mt-6 w-full rounded-xl bg-success py-3 text-sm font-semibold text-white transition-colors hover:bg-success disabled:opacity-50"
               >
                 {processing ? "Processing…" : `Pay ${money(outstanding)} securely`}
               </button>
-              <p className="mt-3 text-center text-xs text-slate-400">
+              <p className="mt-3 text-center text-xs text-ink-muted">
                 Simulated gateway · settles instantly against the live ledger
               </p>
             </>

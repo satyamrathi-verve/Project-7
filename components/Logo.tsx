@@ -16,7 +16,7 @@ export default function Logo({ className = '', variant = 'light', size = 'md' }:
 
   const colors = {
     light: { verve: 'text-white', advisory: 'text-white/90' },
-    dark: { verve: 'text-[#2B4C8C]', advisory: 'text-slate-700' },
+    dark: { verve: 'text-brand', advisory: 'text-ink-secondary' },
   };
 
   return (

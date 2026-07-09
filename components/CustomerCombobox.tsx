@@ -110,7 +110,7 @@ export function CustomerCombobox({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => pick(c)}
                   className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors duration-100 ${FOCUS_RING} ${
-                    i === activeIdx ? "bg-brand/10 text-ink" : "text-ink-secondary hover:bg-black/[0.03]"
+                    i === activeIdx ? "bg-brand/10 text-ink" : "text-ink-secondary hover:bg-ink/[0.03]"
                   }`}
                 >
                   <span className="truncate">{c.name}</span>

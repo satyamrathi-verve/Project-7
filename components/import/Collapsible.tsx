@@ -19,25 +19,25 @@ export function Collapsible({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left hover:bg-slate-50"
+        className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left hover:bg-section"
       >
         <span className="flex min-w-0 items-center gap-2">
           <span className="min-w-0">
-            <span className="block truncate text-sm font-bold text-slate-900">{title}</span>
-            {subtitle && <span className="block truncate text-xs text-slate-500">{subtitle}</span>}
+            <span className="block truncate text-sm font-bold text-ink">{title}</span>
+            {subtitle && <span className="block truncate text-xs text-ink-muted">{subtitle}</span>}
           </span>
           {badge}
         </span>
-        <span className={`flex-none text-slate-400 transition-transform duration-150 ${open ? "rotate-180" : ""}`} aria-hidden>
+        <span className={`flex-none text-ink-muted transition-transform duration-150 ${open ? "rotate-180" : ""}`} aria-hidden>
           ▾
         </span>
       </button>
-      {open && <div className="border-t border-slate-100 p-5">{children}</div>}
+      {open && <div className="border-t border-hairline/50 p-5">{children}</div>}
     </div>
   );
 }

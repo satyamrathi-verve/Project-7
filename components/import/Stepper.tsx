@@ -10,7 +10,7 @@ export const WIZARD_STEPS = [
 
 export function Stepper({ current, furthest, onJump }: { current: number; furthest: number; onJump: (step: number) => void }) {
   return (
-    <ol className="mb-8 flex items-center gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-3">
+    <ol className="mb-8 flex items-center gap-1 overflow-x-auto rounded-xl border border-hairline bg-surface p-3">
       {WIZARD_STEPS.map((label, i) => {
         const step = i + 1;
         const isCurrent = step === current;
@@ -28,24 +28,24 @@ export function Stepper({ current, furthest, onJump }: { current: number; furthe
                   : isDone
                   ? "text-brand hover:bg-brand/10"
                   : reachable
-                  ? "text-slate-600 hover:bg-slate-100"
-                  : "cursor-not-allowed text-slate-300"
+                  ? "text-ink-secondary hover:bg-section"
+                  : "cursor-not-allowed text-ink-muted/60"
               }`}
             >
               <span
                 className={`flex h-5 w-5 flex-none items-center justify-center rounded-full text-[10px] font-bold ${
                   isCurrent
-                    ? "bg-white text-brand"
+                    ? "bg-surface text-brand"
                     : isDone
                     ? "bg-brand text-white"
-                    : "bg-slate-200 text-slate-500"
+                    : "bg-hairline text-ink-muted"
                 }`}
               >
                 {isDone ? "✓" : step}
               </span>
               <span className="truncate">{label}</span>
             </button>
-            {step < WIZARD_STEPS.length && <span className="mx-1 hidden h-px flex-1 bg-slate-200 sm:block" />}
+            {step < WIZARD_STEPS.length && <span className="mx-1 hidden h-px flex-1 bg-hairline sm:block" />}
           </li>
         );
       })}

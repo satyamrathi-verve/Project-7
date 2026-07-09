@@ -8,9 +8,9 @@ import { listAuditLog, deleteAuditEntry, type AuditEntry, type AuditStatus } fro
 import { formatDateTime } from "@/lib/format";
 
 const STATUS_STYLES: Record<AuditStatus, string> = {
-  success: "bg-emerald-100 text-emerald-700",
-  partial: "bg-amber-100 text-amber-700",
-  failed: "bg-red-100 text-red-700",
+  success: "bg-success-bg text-success",
+  partial: "bg-warning-bg text-warning",
+  failed: "bg-danger-bg text-danger",
 };
 
 const STATUS_LABEL: Record<AuditStatus, string> = {
@@ -35,33 +35,33 @@ export default function ImportHistoryPage() {
         title="Import History"
         subtitle="Every bulk import run in this browser — who ran it, what happened, and what to review."
         action={
-          <Link href="/upload" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+          <Link href="/upload" className="rounded-lg border border-ink-muted/40 px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section">
             ← Back to Upload Report
           </Link>
         }
       />
 
       {entries.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center">
-          <p className="text-sm font-semibold text-slate-600">No imports yet</p>
-          <p className="mt-1 text-sm text-slate-400">Run your first CSV import from Upload Report and it'll show up here.</p>
+        <div className="rounded-xl border border-dashed border-ink-muted/40 bg-surface p-12 text-center">
+          <p className="text-sm font-semibold text-ink-secondary">No imports yet</p>
+          <p className="mt-1 text-sm text-ink-muted">Run your first CSV import from Upload Report and it'll show up here.</p>
           <Link href="/upload" className="mt-4 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark">
             Go to Upload Report
           </Link>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                <th className="px-4 py-3 font-semibold text-slate-600">Date &amp; Time</th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Imported By</th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Type</th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Status</th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Total</th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Imported</th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Failed</th>
-                <th className="px-4 py-3 font-semibold text-slate-600"></th>
+              <tr className="border-b border-hairline bg-section text-left">
+                <th className="px-4 py-3 font-semibold text-ink-secondary">Date &amp; Time</th>
+                <th className="px-4 py-3 font-semibold text-ink-secondary">Imported By</th>
+                <th className="px-4 py-3 font-semibold text-ink-secondary">Type</th>
+                <th className="px-4 py-3 font-semibold text-ink-secondary">Status</th>
+                <th className="px-4 py-3 font-semibold text-ink-secondary">Total</th>
+                <th className="px-4 py-3 font-semibold text-ink-secondary">Imported</th>
+                <th className="px-4 py-3 font-semibold text-ink-secondary">Failed</th>
+                <th className="px-4 py-3 font-semibold text-ink-secondary"></th>
               </tr>
             </thead>
             <tbody>
@@ -70,19 +70,19 @@ export default function ImportHistoryPage() {
                 const isOpen = expanded === e.id;
                 return (
                   <Fragment key={e.id}>
-                    <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDateTime(e.performedAt)}</td>
-                      <td className="px-4 py-3 text-slate-700">{e.performedBy || "—"}</td>
-                      <td className="px-4 py-3 text-slate-700">{ENTITY_CONFIGS[e.entity]?.label ?? e.entity}</td>
+                    <tr className="border-b border-hairline/50 last:border-0 hover:bg-section">
+                      <td className="whitespace-nowrap px-4 py-3 text-ink-secondary">{formatDateTime(e.performedAt)}</td>
+                      <td className="px-4 py-3 text-ink-secondary">{e.performedBy || "—"}</td>
+                      <td className="px-4 py-3 text-ink-secondary">{ENTITY_CONFIGS[e.entity]?.label ?? e.entity}</td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[e.status]}`}>{STATUS_LABEL[e.status]}</span>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">{e.rowCount.toLocaleString()}</td>
-                      <td className="px-4 py-3 font-medium text-emerald-600">{imported.toLocaleString()}</td>
-                      <td className="px-4 py-3 font-medium text-red-600">{e.failed.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-ink-secondary">{e.rowCount.toLocaleString()}</td>
+                      <td className="px-4 py-3 font-medium text-success">{imported.toLocaleString()}</td>
+                      <td className="px-4 py-3 font-medium text-danger">{e.failed.toLocaleString()}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">
-                          <button type="button" onClick={() => setExpanded(isOpen ? null : e.id)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                          <button type="button" onClick={() => setExpanded(isOpen ? null : e.id)} className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section">
                             {isOpen ? "Hide" : "View"}
                           </button>
                           <button
@@ -90,7 +90,7 @@ export default function ImportHistoryPage() {
                             onClick={() => {
                               if (window.confirm("Delete this import history record? This can't be undone.")) handleDelete(e.id);
                             }}
-                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                            className="rounded-lg border border-danger-border px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger-bg"
                           >
                             Delete
                           </button>
@@ -98,7 +98,7 @@ export default function ImportHistoryPage() {
                       </td>
                     </tr>
                     {isOpen && (
-                      <tr className="border-b border-slate-100 bg-slate-50">
+                      <tr className="border-b border-hairline/50 bg-section">
                         <td colSpan={8} className="px-4 py-4">
                           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <Detail label="File" value={e.fileName} />
@@ -115,16 +115,16 @@ export default function ImportHistoryPage() {
                           </div>
                           {e.failedSample.length > 0 && (
                             <div className="mt-4">
-                              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                                 Sample of failed rows ({e.failedSample.length}{e.failed > e.failedSample.length ? ` of ${e.failed}` : ""})
                               </p>
-                              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                              <div className="overflow-hidden rounded-lg border border-hairline bg-surface">
                                 <table className="w-full text-xs">
                                   <tbody>
                                     {e.failedSample.map((f, i) => (
-                                      <tr key={i} className="border-b border-slate-100 last:border-0">
-                                        <td className="whitespace-nowrap px-3 py-1.5 font-medium text-slate-700">{f.key}</td>
-                                        <td className="px-3 py-1.5 text-red-600">{f.error}</td>
+                                      <tr key={i} className="border-b border-hairline/50 last:border-0">
+                                        <td className="whitespace-nowrap px-3 py-1.5 font-medium text-ink-secondary">{f.key}</td>
+                                        <td className="px-3 py-1.5 text-danger">{f.error}</td>
                                       </tr>
                                     ))}
                                   </tbody>
@@ -149,8 +149,8 @@ export default function ImportHistoryPage() {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className="text-sm font-semibold text-slate-800">{value}</p>
+      <p className="text-xs text-ink-muted">{label}</p>
+      <p className="text-sm font-semibold text-ink">{value}</p>
     </div>
   );
 }

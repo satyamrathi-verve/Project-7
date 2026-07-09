@@ -9,7 +9,7 @@ const ACCENT_STYLES: Record<Accent, { ring: string; icon: string; trendUp: strin
   green: { ring: "bg-success/10 text-success", icon: "bg-success/10", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-success/40" },
   orange: { ring: "bg-warning/10 text-warning", icon: "bg-warning/10", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-warning/40" },
   red: { ring: "bg-danger/10 text-danger", icon: "bg-danger/10", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-danger/40" },
-  purple: { ring: "bg-violet-50 text-violet-600", icon: "bg-violet-100", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-violet-300" },
+  purple: { ring: "bg-[#a78bfa]/10 text-[#a78bfa]", icon: "bg-[#a78bfa]/10", trendUp: "text-success", trendDown: "text-danger", hoverBorder: "hover:border-[#a78bfa]/40" },
 };
 
 /** Tiny inline sparkline — no charting dependency, just an SVG polyline. */
@@ -23,7 +23,15 @@ function Sparkline({ points, accent }: { points: number[]; accent: Accent }) {
   const step = w / (points.length - 1);
   const coords = points.map((p, i) => `${i * step},${h - ((p - min) / range) * h}`).join(" ");
   const strokeColor =
-    accent === "green" ? "#059669" : accent === "orange" ? "#d97706" : accent === "red" ? "#dc2626" : accent === "purple" ? "#7c3aed" : "#2563eb";
+    accent === "green"
+      ? "rgb(var(--color-success))"
+      : accent === "orange"
+        ? "rgb(var(--color-warning))"
+        : accent === "red"
+          ? "rgb(var(--color-danger))"
+          : accent === "purple"
+            ? "#a78bfa"
+            : "rgb(var(--color-info))";
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-8 w-full" preserveAspectRatio="none">
       <polyline

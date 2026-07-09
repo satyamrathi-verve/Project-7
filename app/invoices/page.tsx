@@ -274,7 +274,7 @@ export default function InvoiceListPage() {
       />
 
       {/* Tabs — switches between the invoice list and the new-invoice form */}
-      <div role="tablist" aria-label="Invoices" className="mb-6 inline-flex h-9 items-center gap-0.5 rounded-lg bg-black/[0.035] p-1">
+      <div role="tablist" aria-label="Invoices" className="mb-6 inline-flex h-9 items-center gap-0.5 rounded-lg bg-ink/[0.035] p-1">
         <button
           type="button"
           role="tab"
@@ -361,7 +361,7 @@ export default function InvoiceListPage() {
             </div>
 
             {/* Segmented control replaces native <select> — same filter, no OS-chrome context switch */}
-            <div role="group" aria-label="Filter by status" className="inline-flex h-9 items-center gap-0.5 rounded-lg bg-black/[0.035] p-1">
+            <div role="group" aria-label="Filter by status" className="inline-flex h-9 items-center gap-0.5 rounded-lg bg-ink/[0.035] p-1">
               {STATUS_FILTERS.map((f) => {
                 const active = statusFilter === f.value;
                 return (
@@ -443,19 +443,19 @@ export default function InvoiceListPage() {
                   {loading ? (
                     Array.from({ length: 8 }).map((_, i) => (
                       <tr key={i} className="border-b border-hairline last:border-0">
-                        <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-black/[0.04] motion-reduce:animate-none" /></td>
-                        <td className="px-4 py-3"><div className="h-4 w-16 animate-pulse rounded bg-black/[0.04] motion-reduce:animate-none" /></td>
-                        <td className="px-4 py-3"><div className="h-4 w-40 animate-pulse rounded bg-black/[0.04] motion-reduce:animate-none" /></td>
-                        <td className="px-4 py-3"><div className="ml-auto h-4 w-20 animate-pulse rounded bg-black/[0.04] motion-reduce:animate-none" /></td>
-                        <td className="px-4 py-3"><div className="ml-auto h-4 w-20 animate-pulse rounded bg-black/[0.04] motion-reduce:animate-none" /></td>
-                        <td className="px-4 py-3"><div className="h-4 w-16 animate-pulse rounded bg-black/[0.04] motion-reduce:animate-none" /></td>
-                        <td className="px-4 py-3"><div className="h-5 w-14 animate-pulse rounded-full bg-black/[0.04] motion-reduce:animate-none" /></td>
+                        <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-ink/[0.04] motion-reduce:animate-none" /></td>
+                        <td className="px-4 py-3"><div className="h-4 w-16 animate-pulse rounded bg-ink/[0.04] motion-reduce:animate-none" /></td>
+                        <td className="px-4 py-3"><div className="h-4 w-40 animate-pulse rounded bg-ink/[0.04] motion-reduce:animate-none" /></td>
+                        <td className="px-4 py-3"><div className="ml-auto h-4 w-20 animate-pulse rounded bg-ink/[0.04] motion-reduce:animate-none" /></td>
+                        <td className="px-4 py-3"><div className="ml-auto h-4 w-20 animate-pulse rounded bg-ink/[0.04] motion-reduce:animate-none" /></td>
+                        <td className="px-4 py-3"><div className="h-4 w-16 animate-pulse rounded bg-ink/[0.04] motion-reduce:animate-none" /></td>
+                        <td className="px-4 py-3"><div className="h-5 w-14 animate-pulse rounded-full bg-ink/[0.04] motion-reduce:animate-none" /></td>
                       </tr>
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-16 text-center">
-                        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.04] text-ink-muted">
+                        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-ink/[0.04] text-ink-muted">
                           <SearchIcon />
                         </div>
                         <p className="text-sm font-medium text-ink-secondary">No invoices match.</p>
@@ -473,7 +473,7 @@ export default function InvoiceListPage() {
                       const out = outstandingOf(inv);
                       const due = dueInfo(inv);
                       return (
-                        <tr key={inv.id} className="group border-b border-hairline transition-colors duration-150 last:border-0 hover:bg-black/[0.015]">
+                        <tr key={inv.id} className="group border-b border-hairline transition-colors duration-150 last:border-0 hover:bg-ink/[0.015]">
                           <td className="px-4 py-3 font-medium">
                             <Link
                               href={`/invoices/${inv.id}`}
