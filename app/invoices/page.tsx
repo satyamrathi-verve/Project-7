@@ -504,7 +504,7 @@ export default function InvoiceListPage() {
                               <Link
                                 href={`/invoices/${inv.id}/print`}
                                 aria-label={`Print ${inv.invoice_no}`}
-                                className={`text-ink-muted opacity-0 transition-opacity duration-150 hover:text-brand group-hover:opacity-100 ${FOCUS_RING} rounded`}
+                                className={`text-ink-muted transition-colors duration-150 hover:text-brand ${FOCUS_RING} rounded`}
                               >
                                 <PrintIcon />
                               </Link>
@@ -630,7 +630,7 @@ function PlusIcon() {
 }
 function PrintIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
       <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2" strokeLinecap="round" strokeLinejoin="round" />
       <rect x="6" y="14" width="12" height="7" rx="1" />
     </svg>
