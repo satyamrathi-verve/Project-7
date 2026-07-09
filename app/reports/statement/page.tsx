@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase, isConfigured } from "@/lib/supabase";
-import type { Customer, Invoice, Receipt, ReceiptAllocation, ReminderLog } from "@/lib/types";
+import type { Company, Customer, Invoice, Receipt, ReceiptAllocation, ReminderLog } from "@/lib/types";
 import { NotConfigured } from "@/components/NotConfigured";
 import { inputClass } from "@/components/FormField";
 
@@ -65,6 +65,7 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
 
 export default function CustomerStatementPage() {
   const searchParams = useSearchParams();
+  const [company, setCompany] = useState<Company | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [selectedId, setSelectedId] = useState<string>(searchParams.get("customer") ?? "");
@@ -82,6 +83,8 @@ export default function CustomerStatementPage() {
   const [txnFilter, setTxnFilter] = useState<"all" | TxnType>("all");
 
   const [note, setNote] = useState<string | null>(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
   function toast(message: string) {
     setNote(message);
   }
@@ -91,13 +94,177 @@ export default function CustomerStatementPage() {
     return () => clearTimeout(t);
   }, [note]);
 
+  async function generatePdf() {
+    if (!customer) return;
+    setGeneratingPdf(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const autoTable = (await import("jspdf-autotable")).default;
+
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let y = 15;
+
+      // Company Header
+      doc.setFontSize(20);
+      doc.setTextColor(30, 58, 95);
+      doc.setFont("helvetica", "bold");
+      doc.text(company?.name || "Company Name", 15, y);
+
+      // Statement badge
+      doc.setFillColor(30, 58, 95);
+      doc.roundedRect(pageWidth - 55, y - 8, 40, 12, 2, 2, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.text("STATEMENT", pageWidth - 35, y - 1, { align: "center" });
+
+      y += 8;
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      if (company?.address) {
+        doc.text(company.address, 15, y);
+        y += 4;
+      }
+      const companyInfo = [company?.gstin ? `GSTIN: ${company.gstin}` : "", company?.email, company?.phone].filter(Boolean).join(" | ");
+      if (companyInfo) doc.text(companyInfo, 15, y);
+
+      // Date info on right
+      doc.text(`Date: ${formatDate(today)}`, pageWidth - 15, y - 4, { align: "right" });
+      doc.text(`Period: ${PERIOD_LABELS[period]}`, pageWidth - 15, y, { align: "right" });
+
+      // Line under header
+      y += 6;
+      doc.setDrawColor(30, 58, 95);
+      doc.setLineWidth(0.8);
+      doc.line(15, y, pageWidth - 15, y);
+
+      // Customer details
+      y += 10;
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text("STATEMENT FOR", 15, y);
+      y += 5;
+      doc.setFontSize(14);
+      doc.setTextColor(30, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.text(customer.name, 15, y);
+      y += 5;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+      doc.text(customer.code, 15, y);
+      if (customer.address) { y += 4; doc.text(customer.address, 15, y); }
+      if (customer.gstin) { y += 4; doc.text(`GSTIN: ${customer.gstin}`, 15, y); }
+
+      // Account Summary box
+      const summaryX = 115;
+      const summaryY = y - 20;
+      doc.setFillColor(243, 244, 246);
+      doc.roundedRect(summaryX, summaryY - 5, 80, 40, 2, 2, "F");
+
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text("ACCOUNT SUMMARY", summaryX + 5, summaryY);
+
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      let sy = summaryY + 6;
+      doc.text("Opening Balance", summaryX + 5, sy);
+      doc.text(formatMoney(customer.opening_balance), summaryX + 75, sy, { align: "right" });
+      sy += 5;
+      doc.text("Total Invoiced", summaryX + 5, sy);
+      doc.text(formatMoney(totalInvoiced), summaryX + 75, sy, { align: "right" });
+      sy += 5;
+      doc.text("Total Received", summaryX + 5, sy);
+      doc.setTextColor(5, 150, 105);
+      doc.text(`(${formatMoney(totalReceived)})`, summaryX + 75, sy, { align: "right" });
+      sy += 2;
+      doc.setDrawColor(180, 180, 180);
+      doc.line(summaryX + 5, sy, summaryX + 75, sy);
+      sy += 5;
+      doc.setTextColor(30, 58, 95);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Balance Due", summaryX + 5, sy);
+      doc.setFontSize(12);
+      doc.text(formatMoney(outstandingBalance), summaryX + 75, sy, { align: "right" });
+
+      // Table
+      y += 15;
+      const tableData = displayRows.map(r => [
+        r.date ? formatDate(r.date) : "—",
+        r.particulars + (r.note ? ` (${r.note})` : ""),
+        r.ref,
+        r.debit ? formatMoney(r.debit) : "—",
+        r.credit ? formatMoney(r.credit) : "—",
+        formatMoney(r.balance)
+      ]);
+
+      autoTable(doc, {
+        startY: y,
+        head: [["Date", "Particulars", "Ref", "Debit", "Credit", "Balance"]],
+        body: tableData,
+        foot: [["", "Totals for period", "", formatMoney(totalDebit), formatMoney(totalCredit), formatMoney(closingBalance)]],
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: "bold" },
+        footStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        columnStyles: {
+          0: { cellWidth: 22 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 22 },
+          3: { cellWidth: 28, halign: "right" },
+          4: { cellWidth: 28, halign: "right" },
+          5: { cellWidth: 28, halign: "right", fontStyle: "bold" },
+        },
+        margin: { left: 15, right: 15 },
+      });
+
+      // Amount Due box
+      const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+      doc.setFillColor(30, 58, 95);
+      doc.roundedRect(pageWidth - 70, finalY, 55, 20, 2, 2, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.text("Total Amount Due", pageWidth - 42.5, finalY + 6, { align: "center" });
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(formatMoney(closingBalance), pageWidth - 42.5, finalY + 14, { align: "center" });
+
+      // Footer
+      const footerY = finalY + 35;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(15, footerY, pageWidth - 15, footerY);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Payment Terms: Please pay within ${customer.credit_days} days of invoice date.`, 15, footerY + 6);
+      doc.text(`For queries: ${company?.email || "accounts@company.com"}`, 15, footerY + 10);
+
+      doc.setFontSize(7);
+      doc.setTextColor(150, 150, 150);
+      doc.text("This is a computer-generated statement and does not require a signature.", pageWidth / 2, footerY + 20, { align: "center" });
+
+      doc.save(`Statement_${customer.code}_${today}.pdf`);
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      toast("Failed to generate PDF");
+    }
+    setGeneratingPdf(false);
+  }
+
   useEffect(() => {
     async function loadCustomers() {
       if (!supabase) return;
       setLoadingCustomers(true);
-      const { data, error } = await supabase.from("customers").select("*").order("name", { ascending: true });
-      if (error) setError(error.message);
-      else setCustomers(data as Customer[]);
+      const [custRes, compRes] = await Promise.all([
+        supabase.from("customers").select("*").order("name", { ascending: true }),
+        supabase.from("company").select("*").limit(1).single(),
+      ]);
+      if (custRes.error) setError(custRes.error.message);
+      else setCustomers(custRes.data as Customer[]);
+      if (compRes.data) setCompany(compRes.data as Company);
       setLoadingCustomers(false);
     }
     loadCustomers();
@@ -459,11 +626,12 @@ export default function CustomerStatementPage() {
             Send Reminder
           </button>
           <button
-            onClick={() => (customer ? window.print() : toast("Select a customer first."))}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-dark"
-            title="Opens your browser's print dialog — choose 'Save as PDF' to export"
+            onClick={() => (customer ? generatePdf() : toast("Select a customer first."))}
+            disabled={generatingPdf}
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-dark disabled:opacity-50"
+            title="Download as PDF"
           >
-            Print Statement
+            {generatingPdf ? "Generating..." : "Download PDF"}
           </button>
         </div>
       </div>
@@ -603,20 +771,72 @@ export default function CustomerStatementPage() {
           </div>
 
           {/* Ledger card */}
-          <div className="rounded-xl border border-hairline bg-surface p-6 print:border-0 print:p-0 print:shadow-none">
-            <div className="hidden items-start justify-between border-b border-hairline/50 pb-4 print:flex">
-              <div>
-                <h3 className="text-lg font-bold text-ink">{customer.name}</h3>
-                <p className="text-sm text-ink-muted">
-                  {customer.code}
-                  {customer.gstin ? ` · GSTIN ${customer.gstin}` : ""}
-                </p>
+          <div className="rounded-xl border border-hairline bg-surface p-6 print:p-0 print:bg-white statement-card">
+            {/* Print-only professional header */}
+            <div className="hidden print:block mb-8">
+              {/* Company letterhead */}
+              <div className="pb-5 mb-6" style={{ borderBottom: '4px solid #1e3a5f' }}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h1 className="text-3xl font-bold text-blue-900 tracking-tight">{company?.name || "Company Name"}</h1>
+                    {company?.address && <p className="text-sm text-gray-700 mt-2 max-w-xs">{company.address}</p>}
+                    <div className="mt-2 text-xs text-gray-600 space-y-0.5">
+                      {company?.gstin && <p><span className="font-semibold">GSTIN:</span> {company.gstin}</p>}
+                      <p>
+                        {company?.email && <span>{company.email}</span>}
+                        {company?.email && company?.phone && <span className="mx-2">|</span>}
+                        {company?.phone && <span>{company.phone}</span>}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="inline-block text-white px-6 py-3 rounded" style={{ backgroundColor: '#1e3a5f' }}>
+                      <h2 className="text-xl font-bold tracking-wide">STATEMENT</h2>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-3">Date: {formatDate(today)}</p>
+                    <p className="text-sm text-gray-600">Period: {PERIOD_LABELS[period]}</p>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-ink-muted">Generated {formatDate(today)}</p>
+
+              {/* Customer details and summary in two columns */}
+              <div className="grid grid-cols-2 gap-8 mb-6">
+                <div className="pl-4" style={{ borderLeft: '4px solid #1e3a5f' }}>
+                  <p className="text-xs font-bold uppercase text-gray-500 tracking-wider mb-2">Statement For</p>
+                  <p className="text-lg font-bold text-gray-900">{customer.name}</p>
+                  <p className="text-sm text-gray-600 font-medium">{customer.code}</p>
+                  {customer.address && <p className="text-sm text-gray-600 mt-1">{customer.address}</p>}
+                  {customer.gstin && <p className="text-sm text-gray-600 mt-1"><span className="font-medium">GSTIN:</span> {customer.gstin}</p>}
+                  {customer.email && <p className="text-sm text-gray-600">{customer.email}</p>}
+                </div>
+                <div>
+                  <div className="rounded-lg p-4" style={{ backgroundColor: '#f3f4f6' }}>
+                    <p className="text-xs font-bold uppercase text-gray-500 tracking-wider mb-3">Account Summary</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Opening Balance</span>
+                        <span className="font-medium text-gray-900">{formatMoney(customer.opening_balance)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Invoiced</span>
+                        <span className="font-medium text-gray-900">{formatMoney(totalInvoiced)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Received</span>
+                        <span className="font-medium text-green-700">({formatMoney(totalReceived)})</span>
+                      </div>
+                      <div className="flex justify-between pt-2 mt-2" style={{ borderTop: '2px solid #d1d5db' }}>
+                        <span className="font-bold text-gray-900">Balance Due</span>
+                        <span className="font-bold text-xl text-blue-900">{formatMoney(outstandingBalance)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Statement metadata strip */}
-            <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg bg-section p-4 text-xs text-ink-secondary sm:grid-cols-3 lg:grid-cols-6">
+            {/* Statement metadata strip - hidden in print as info is in header */}
+            <div className="mb-4 grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg bg-section p-4 text-xs text-ink-secondary sm:grid-cols-3 lg:grid-cols-6 print:hidden">
               <MetaItem label="Period" value={PERIOD_LABELS[period]} />
               <MetaItem label="From" value={statementFrom ? formatDate(statementFrom) : "—"} />
               <MetaItem label="To" value={formatDate(statementTo)} />
@@ -625,9 +845,9 @@ export default function CustomerStatementPage() {
               <MetaItem label="Closing Balance" value={formatMoney(closingBalance)} strong />
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-hairline">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="sticky top-0 z-[1]">
+            <div className="overflow-x-auto rounded-xl border border-hairline print:overflow-visible print:rounded-none statement-table-wrapper">
+              <table className="w-full min-w-[720px] text-sm print:min-w-0">
+                <thead className="sticky top-0 z-[1] print:static print-thead">
                   <tr className="border-b border-hairline bg-section text-left">
                     <th className="px-4 py-3 font-semibold text-ink-secondary">Date</th>
                     <th className="px-4 py-3 font-semibold text-ink-secondary">Particulars</th>
@@ -664,7 +884,7 @@ export default function CustomerStatementPage() {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot>
+                <tfoot className="print-tfoot">
                   <tr className="border-t border-hairline bg-section">
                     <td className="px-4 py-3 font-semibold text-ink-secondary" colSpan={3}>
                       Totals for period
@@ -677,11 +897,44 @@ export default function CustomerStatementPage() {
               </table>
             </div>
 
-            <div className="mt-4 flex items-center justify-end gap-2 text-sm">
+            <div className="mt-4 flex items-center justify-end gap-2 text-sm print:hidden">
               <span className="text-ink-muted">Closing balance (amount owed):</span>
               <span className="text-lg font-bold text-ink">{formatMoney(closingBalance)}</span>
             </div>
+
+            {/* Print-only professional footer */}
+            <div className="hidden print:block mt-10">
+              {/* Amount due box */}
+              <div className="flex justify-end mb-6">
+                <div className="text-white px-8 py-4 rounded" style={{ backgroundColor: '#1e3a5f' }}>
+                  <p className="text-sm font-medium opacity-90">Total Amount Due</p>
+                  <p className="text-2xl font-bold">{formatMoney(closingBalance)}</p>
+                  {overdueAmount > 0 && (
+                    <p className="text-sm mt-1 text-red-300">Overdue: {formatMoney(overdueAmount)}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer notes */}
+              <div className="pt-4 mt-4" style={{ borderTop: '2px solid #e5e7eb' }}>
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <p className="font-semibold text-gray-700">Payment Terms</p>
+                    <p>Please pay within {customer.credit_days} days of invoice date.</p>
+                    <p>For queries, contact: {company?.email || "accounts@company.com"}</p>
+                  </div>
+                  <div className="text-xs text-gray-500 text-right space-y-1">
+                    <p className="font-semibold text-gray-700">Bank Details</p>
+                    <p>Please include invoice numbers in payment reference.</p>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-gray-400 mt-6 pt-4" style={{ borderTop: '1px solid #f3f4f6' }}>
+                  This is a computer-generated statement and does not require a signature.
+                </p>
+              </div>
+            </div>
           </div>
+
         </>
       )}
     </>

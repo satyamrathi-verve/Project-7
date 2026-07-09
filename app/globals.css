@@ -155,3 +155,117 @@ body::after {
 * {
   transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
+
+/* Print styles for clean PDF export */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 15mm;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    color: #1f2937 !important;
+    font-size: 10pt !important;
+    line-height: 1.5 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  }
+
+  body::before,
+  body::after {
+    display: none !important;
+  }
+
+  /* Hide navigation, sidebar, and controls */
+  nav,
+  aside,
+  .print\\:hidden,
+  [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Make main content full width */
+  main,
+  .print-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* REMOVE ALL BORDERS AND SHADOWS */
+  * {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  /* Professional table styling for print */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+  }
+
+  td {
+    padding: 8px 12px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #f9fafb !important;
+  }
+
+  /* Table header and footer for print */
+  .print-thead tr,
+  .print-thead th {
+    background-color: #1e3a5f !important;
+    color: white !important;
+  }
+
+  .print-tfoot tr,
+  .print-tfoot td {
+    background-color: #1e3a5f !important;
+    color: white !important;
+  }
+
+  /* Page break control */
+  .avoid-break {
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure links don't show underlines */
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  /* Statement specific - remove all wrapper borders */
+  .statement-card,
+  .statement-table-wrapper,
+  .rounded-xl,
+  .border,
+  .border-hairline,
+  div[class*="border"],
+  div[class*="rounded"] {
+    border: none !important;
+    border-width: 0 !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Only keep table row bottom borders */
+  table tbody td {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  /* Keep the decorative borders we want via inline styles */
+  [style*="border"] {
+    /* Allow inline style borders */
+  }
+}

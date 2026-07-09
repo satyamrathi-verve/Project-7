@@ -44,9 +44,11 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen">
-      <Nav />
-      <main className="flex-1 overflow-y-auto p-8">{children}</main>
+    <div className="flex h-screen print:block">
+      <div className="print:hidden">
+        <Nav />
+      </div>
+      <main className="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible">{children}</main>
     </div>
   );
 }
