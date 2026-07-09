@@ -41,35 +41,35 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <div className="rounded-xl border border-hairline bg-surface p-6 shadow-card">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           How this works
         </h3>
-        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-slate-700">
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink-secondary">
           <li>The database and all its data already exist in Supabase — you never touch the backend.</li>
           <li>You point <span className="font-medium text-brand">Claude Code</span> at a screen from the list; it writes the page, you tweak it in plain English.</li>
           <li>When a screen works, you commit &amp; push — that scores your team on the live leaderboard.</li>
-          <li>Read <code className="rounded bg-slate-100 px-1">README.md</code> for setup and the kickoff prompt to paste into Claude Code.</li>
+          <li>Read <code className="rounded bg-black/[0.04] px-1">README.md</code> for setup and the kickoff prompt to paste into Claude Code.</li>
         </ol>
       </div>
 
-      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <div className="mt-6 rounded-xl border border-hairline bg-surface p-6 shadow-card">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           The screens to build
         </h3>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-ink-muted">
           Get as far as you can — a few done well beats all of them half-broken. The
-          spine <span className="font-medium text-slate-700">Sign In → Customer Master → Invoice List → Invoice View → Receipt Entry</span> demos best.
+          spine <span className="font-medium text-ink-secondary">Sign In → Customer Master → Invoice List → Invoice View → Receipt Entry</span> demos best.
         </p>
-        <ol className="mt-4 grid list-decimal gap-x-8 gap-y-2 pl-5 text-sm text-slate-700 sm:grid-cols-2">
+        <ol className="mt-4 grid list-decimal gap-x-8 gap-y-2 pl-5 text-sm text-ink-secondary sm:grid-cols-2">
           {ROADMAP.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ol>
       </div>
 
-      <p className="mt-6 text-sm text-slate-500">
-        Ready? Tell Claude Code: <span className="font-medium text-slate-700">&ldquo;build the Sign In screen.&rdquo;</span>
+      <p className="mt-6 text-sm text-ink-muted">
+        Ready? Tell Claude Code: <span className="font-medium text-ink-secondary">&ldquo;build the Sign In screen.&rdquo;</span>
       </p>
     </>
   );

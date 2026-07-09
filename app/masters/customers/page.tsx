@@ -181,7 +181,7 @@ export default function CustomerMasterPage() {
         action={
           <button
             onClick={openAdd}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark"
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-brand-dark hover:scale-[1.02] active:scale-[0.98]"
           >
             + Add Customer
           </button>
@@ -189,7 +189,7 @@ export default function CustomerMasterPage() {
       />
 
       {loading ? (
-        <p className="text-sm text-slate-400">Loading customers…</p>
+        <p className="text-sm text-ink-muted">Loading customers…</p>
       ) : (
         <>
           <DataTable columns={columns} rows={customers} empty="No customers yet. Add one to get started." />
@@ -226,14 +226,14 @@ export default function CustomerMasterPage() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-lg rounded-xl border border-hairline bg-surface p-6 shadow-card-hover">
+            <h3 className="text-lg font-semibold tracking-tight text-ink">
               {editingId ? "Edit Customer" : "Add Customer"}
             </h3>
 
             {error && (
-              <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+              <p className="mt-3 rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>
             )}
 
             <div className="mt-4 grid grid-cols-2 gap-4">
@@ -293,14 +293,14 @@ export default function CustomerMasterPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setShowForm(false)}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.04]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !form.code || !form.name}
-                className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
+                className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-brand-dark hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
               >
                 {saving ? "Saving…" : "Save"}
               </button>

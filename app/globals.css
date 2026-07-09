@@ -6,6 +6,60 @@
   color-scheme: light;
 }
 
+/*
+  Architectural background: a near-invisible canvas, not a "designed" one.
+  Two extremely soft radial lights (one warm, one cool-neutral) diffuse from
+  opposite corners, a faint vignette adds depth at the edges, and a 2%-opacity
+  paper grain keeps the surface from looking flat. All three sit behind the
+  app shell (z-0); the shell itself is lifted to z-10 in layout.tsx.
+*/
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply text-ink antialiased;
+  background-color: #f7f8fa;
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px circle at 100% -10%, rgba(63, 81, 181, 0.05), transparent 55%),
+    radial-gradient(900px circle at -10% 100%, rgba(17, 24, 39, 0.03), transparent 60%),
+    radial-gradient(1400px circle at 50% 50%, transparent 60%, rgba(17, 24, 39, 0.025) 100%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.02;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in {
+    animation: fade-in 200ms ease-out;
+  }
+}
+
+/* Nothing bounces. Every transition in this app uses this curve. */
+* {
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }

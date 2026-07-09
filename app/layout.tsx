@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <div className="flex h-screen">
+        <div className="relative z-10 flex h-screen">
           <Nav />
           <main className="flex-1 overflow-y-auto p-8">{children}</main>
         </div>
