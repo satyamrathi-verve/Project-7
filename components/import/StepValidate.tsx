@@ -13,15 +13,20 @@ const STATUS_DOT: Record<RowStatus, string> = {
   error: "bg-danger",
 };
 
-const CARD_DEFS: { key: Filter; label: string; tone: string; ring: string }[] = [
-  { key: "all", label: "Total", tone: "text-ink", ring: "ring-ink-muted" },
-  { key: "valid", label: "Valid", tone: "text-success", ring: "ring-success-border" },
-  { key: "duplicate", label: "Duplicate", tone: "text-purple-600", ring: "ring-purple-400" },
-  { key: "missing", label: "Missing Data", tone: "text-danger", ring: "ring-danger-border" },
-  { key: "invalid", label: "Invalid Data", tone: "text-warning", ring: "ring-warning-border" },
-  { key: "excluded", label: "Excluded", tone: "text-ink-muted", ring: "ring-ink-muted/60" },
+const CARD_DEFS: { key: Filter; label: string; icon: string; tone: string; ring: string }[] = [
+  { key: "all", label: "Total", icon: "📋", tone: "text-ink", ring: "ring-brand" },
+  { key: "valid", label: "Valid", icon: "✅", tone: "text-success", ring: "ring-success" },
+  { key: "error", label: "Errors", icon: "⚠️", tone: "text-danger", ring: "ring-danger" },
+  { key: "duplicate", label: "Duplicates", icon: "🗂️", tone: "text-info", ring: "ring-info" },
+  { key: "excluded", label: "Excluded", icon: "🚫", tone: "text-ink-muted", ring: "ring-ink-muted" },
 ];
 
+/*
+  Quick filter cards drive the SAME `filter` state that the search box narrows
+  further, so cards + free-text search always compose (never fight each other) —
+  and the count shown on each card is computed with the identical predicate used
+  to actually filter the table, so the number never drifts from what's on screen.
+*/
 export function StepValidate({
   entity,
   rows,
@@ -43,13 +48,13 @@ export function StepValidate({
   const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  // Every row is categorized exactly once (see categorizeRow), so these five counts
-  // always add up to the total — the cards, the filter they drive, and the row count
-  // shown below can never disagree with each other.
+  // Every row is categorized exactly once (see categorizeRow), so these counts
+  // always add up to the total — the cards, the filter they drive, and the row
+  // count shown below can never disagree with each other.
   const categorized = useMemo(() => rows.map((r) => ({ row: r, category: categorizeRow(r, entity.uniqueKey) })), [rows, entity.uniqueKey]);
 
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: rows.length, valid: 0, duplicate: 0, missing: 0, invalid: 0, excluded: 0 };
+    const c: Record<Filter, number> = { all: rows.length, valid: 0, duplicate: 0, error: 0, excluded: 0 };
     for (const { category } of categorized) c[category]++;
     return c;
   }, [categorized, rows.length]);
@@ -94,7 +99,7 @@ export function StepValidate({
     const row = filtered[index];
     const fieldLabel = (key: string) => entity.fields.find((f) => f.key === key)?.label ?? key;
     return (
-      <div style={style} className="flex items-center border-b border-hairline/50 px-2 text-xs">
+      <div style={style} className="flex items-center border-b border-hairline px-2 text-xs">
         <div className="grid w-full items-center gap-0" style={{ gridTemplateColumns: gridTemplate }}>
           <input type="checkbox" checked={selected.has(row.rowIndex)} onChange={() => toggleSelected(row.rowIndex)} />
           <span className={`h-2.5 w-2.5 rounded-full ${STATUS_DOT[row.status]}`} title={row.status} />
@@ -143,7 +148,9 @@ export function StepValidate({
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Quick filter cards — click any one to instantly narrow the table below.
+          The active card is highlighted with a colored ring + tinted background. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {CARD_DEFS.map((c) => {
           const active = filter === c.key;
           return (
@@ -152,11 +159,14 @@ export function StepValidate({
               type="button"
               onClick={() => setFilter(c.key)}
               aria-pressed={active}
-              className={`rounded-xl border p-4 text-left transition-all ${
-                active ? `border-transparent bg-surface ring-2 ${c.ring}` : "border-hairline bg-surface hover:border-ink-muted/40"
+              className={`rounded-xl border p-4 text-left shadow-card transition-all duration-150 hover:-translate-y-0.5 hover:shadow-card-hover ${
+                active ? `border-transparent bg-surface ring-2 ${c.ring}` : "border-hairline bg-surface hover:border-brand/40"
               }`}
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{c.label}</p>
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                <span aria-hidden>{c.icon}</span>
+                {c.label}
+              </p>
               <p className={`mt-1 text-2xl font-bold ${c.tone}`}>{counts[c.key].toLocaleString()}</p>
             </button>
           );
@@ -169,21 +179,21 @@ export function StepValidate({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search rows…"
-            className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs outline-none focus:border-brand"
+            className="rounded-lg border border-hairline px-3 py-1.5 text-xs outline-none focus:border-brand"
           />
           {filter !== "all" && (
-            <button type="button" onClick={() => setFilter("all")} className="rounded-full bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-900">
+            <button type="button" onClick={() => setFilter("all")} className="rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-white hover:opacity-90">
               Clear filter ×
             </button>
           )}
         </div>
-        <button type="button" onClick={onRevalidate} className="rounded-lg border border-ink-muted/40 px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section">
+        <button type="button" onClick={onRevalidate} className="rounded-lg border border-hairline px-3 py-1.5 text-xs font-medium text-ink-secondary hover:bg-section">
           Revalidate all
         </button>
       </div>
 
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 rounded-lg bg-slate-800 px-4 py-2.5 text-sm text-white">
+        <div className="flex items-center gap-3 rounded-lg bg-ink px-4 py-2.5 text-sm text-white shadow-card">
           <span>{selected.size} row(s) selected</span>
           <button
             type="button"
@@ -211,7 +221,7 @@ export function StepValidate({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
+      <div className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-card">
         {/* Single scroll container for BOTH the header and the virtualized rows below,
             so dragging the horizontal scrollbar anywhere moves them together. */}
         <div className="overflow-x-auto">
@@ -261,7 +271,7 @@ export function StepValidate({
           {blockingErrors > 0 && (
             <span className="text-xs text-danger">{blockingErrors} row(s) still have errors — they'll be skipped unless fixed.</span>
           )}
-          <button type="button" onClick={onNext} className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark">
+          <button type="button" onClick={onNext} className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-card hover:bg-brand-dark">
             Continue to import configuration
           </button>
         </div>

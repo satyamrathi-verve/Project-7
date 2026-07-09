@@ -51,7 +51,7 @@ export function StepConfigure({
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-5 rounded-xl border border-hairline bg-surface p-5">
+        <div className="space-y-5 rounded-xl border border-hairline bg-surface p-5 shadow-card">
           <div>
             <div className="flex items-center gap-1.5">
               <label className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Duplicate handling (Create New mode)</label>
@@ -60,7 +60,7 @@ export function StepConfigure({
             <select
               value={config.duplicateHandling}
               onChange={(e) => onChange({ ...config, duplicateHandling: e.target.value as ImportConfig["duplicateHandling"] })}
-              className="mt-2 w-full rounded-lg border border-ink-muted/40 px-3 py-2 text-sm outline-none focus:border-brand"
+              className="mt-2 w-full rounded-lg border border-hairline px-3 py-2 text-sm outline-none focus:border-brand"
             >
               <option value="skip">Skip duplicates</option>
               <option value="overwrite">Overwrite duplicates</option>
@@ -75,11 +75,11 @@ export function StepConfigure({
                 id="autocreate"
                 checked={config.autoCreateMissingCustomers}
                 onChange={(e) => onChange({ ...config, autoCreateMissingCustomers: e.target.checked })}
-                className="mt-0.5"
+                className="mt-0.5 accent-brand"
               />
               <label htmlFor="autocreate" className="text-sm text-ink-secondary">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="font-medium">Auto-create missing customers</span>
+                  <span className="font-medium text-ink">Auto-create missing customers</span>
                   <InfoTooltip text="What it does: if an invoice's Customer ID doesn't exist yet, a minimal customer record is created automatically instead of failing the row. When to use: turn this on when your invoice file might reference brand-new customers you haven't punched into Customer Master yet. How to choose: leave it off if you want unknown customer codes caught as errors so you can fix typos before anything is created." />
                 </span>
                 <p className="text-xs text-ink-muted">If an invoice references a customer code that doesn't exist yet, create a minimal customer record instead of failing the row.</p>
@@ -96,7 +96,7 @@ export function StepConfigure({
             <select
               value={config.dateFormat}
               onChange={(e) => onChange({ ...config, dateFormat: e.target.value as ImportConfig["dateFormat"] })}
-              className="mt-2 w-full rounded-lg border border-ink-muted/40 px-3 py-2 text-sm outline-none focus:border-brand"
+              className="mt-2 w-full rounded-lg border border-hairline px-3 py-2 text-sm outline-none focus:border-brand"
             >
               <option value="auto">Auto-detect (ISO, then day/month/year)</option>
               <option value="YMD">YYYY-MM-DD</option>
@@ -106,7 +106,7 @@ export function StepConfigure({
           </div>
         </div>
 
-        <div className="space-y-5 rounded-xl border border-hairline bg-surface p-5">
+        <div className="space-y-5 rounded-xl border border-hairline bg-surface p-5 shadow-card">
           <div>
             <div className="flex items-center gap-1.5">
               <label className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Batch size</label>
@@ -120,7 +120,7 @@ export function StepConfigure({
               step={50}
               value={config.batchSize}
               onChange={(e) => onChange({ ...config, batchSize: Math.min(2000, Math.max(50, Number(e.target.value) || 500)) })}
-              className="mt-2 w-full rounded-lg border border-ink-muted/40 px-3 py-2 text-sm outline-none focus:border-brand"
+              className="mt-2 w-full rounded-lg border border-hairline px-3 py-2 text-sm outline-none focus:border-brand"
             />
           </div>
 
@@ -130,11 +130,11 @@ export function StepConfigure({
               id="continue"
               checked={config.continueOnError}
               onChange={(e) => onChange({ ...config, continueOnError: e.target.checked })}
-              className="mt-0.5"
+              className="mt-0.5 accent-brand"
             />
             <label htmlFor="continue" className="text-sm text-ink-secondary">
               <span className="inline-flex items-center gap-1.5">
-                <span className="font-medium">Continue after recoverable errors</span>
+                <span className="font-medium text-ink">Continue after recoverable errors</span>
                 <InfoTooltip text="What it does: rows that still have unresolved errors are skipped and reported instead of stopping the whole import. When to use: keep this on for almost every real import. How to choose: only turn it off if you need an all-or-nothing import — e.g. a strict data-migration run where any bad row should halt everything for review." />
               </span>
               <p className="text-xs text-ink-muted">Rows that still have unresolved errors are skipped and reported, instead of stopping the whole import.</p>
@@ -150,7 +150,7 @@ export function StepConfigure({
             <select
               value={config.defaultCurrency}
               onChange={(e) => onChange({ ...config, defaultCurrency: e.target.value })}
-              className="mt-2 w-full rounded-lg border border-ink-muted/40 px-3 py-2 text-sm outline-none focus:border-brand"
+              className="mt-2 w-full rounded-lg border border-hairline px-3 py-2 text-sm outline-none focus:border-brand"
             >
               {CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -165,17 +165,17 @@ export function StepConfigure({
       <div className="rounded-xl border border-brand/30 bg-brand/5 p-5">
         <p className="text-sm font-bold text-ink">Ready to import</p>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg bg-surface p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-success">Ready to Import</p>
+          <div className="rounded-lg bg-surface p-4 shadow-card">
+            <p className="text-xs font-semibold uppercase tracking-wide text-success">✅ Ready to Import</p>
             <p className="mt-1 text-2xl font-bold text-success">{readyRows.length.toLocaleString()}</p>
             <p className="mt-1 text-xs text-ink-muted">
               {toCreate.toLocaleString()} to create, {toUpdate.toLocaleString()} to update
             </p>
           </div>
 
-          <div className="rounded-lg bg-surface p-4">
+          <div className="rounded-lg bg-surface p-4 shadow-card">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Excluded</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">🚫 Excluded</p>
               {excludedRows.length > 0 && (
                 <button type="button" onClick={() => setShowExcluded((v) => !v)} className="text-xs font-medium text-brand hover:underline">
                   {showExcluded ? "Hide" : "Review"}
@@ -186,9 +186,9 @@ export function StepConfigure({
             <p className="mt-1 text-xs text-ink-muted">Manually excluded in Step 4.</p>
           </div>
 
-          <div className="rounded-lg bg-surface p-4">
+          <div className="rounded-lg bg-surface p-4 shadow-card">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-danger">Blocked</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-danger">⚠️ Blocked</p>
               {blockedRows.length > 0 && (
                 <button type="button" onClick={() => setShowBlocked((v) => !v)} className="text-xs font-medium text-brand hover:underline">
                   {showBlocked ? "Hide" : "Review"}
@@ -218,7 +218,7 @@ export function StepConfigure({
           type="button"
           disabled={readyRows.length === 0}
           onClick={onNext}
-          className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-card hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
         >
           Start import
         </button>
@@ -230,12 +230,12 @@ export function StepConfigure({
 function ReviewList({ title, rows, uniqueKey }: { title: string; rows: ImportRow[]; uniqueKey: string }) {
   return (
     <div className="mt-4 rounded-lg border border-hairline bg-surface">
-      <p className="border-b border-hairline/50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">{title}</p>
+      <p className="border-b border-hairline px-4 py-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">{title}</p>
       <div className="max-h-56 overflow-y-auto">
         <table className="w-full text-xs">
           <tbody>
             {rows.slice(0, 200).map((r) => (
-              <tr key={r.rowIndex} className="border-b border-hairline/50 last:border-0">
+              <tr key={r.rowIndex} className="border-b border-hairline last:border-0">
                 <td className="whitespace-nowrap px-4 py-2 text-ink-muted">#{r.rowIndex + 1}</td>
                 <td className="whitespace-nowrap px-4 py-2 font-medium text-ink-secondary">{r.values[uniqueKey] || "—"}</td>
                 <td className="px-4 py-2 text-ink-muted">{reasonFor(r)}</td>

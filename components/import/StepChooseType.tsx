@@ -9,6 +9,8 @@ const MODES: { value: ImportMode; label: string; description: string }[] = [
   { value: "upsert", label: "Create or Update (Upsert)", description: "The safest default — new codes are created, existing codes are updated in place." },
 ];
 
+const ENTITY_ICON: Record<string, string> = { customers: "🏢", invoices: "🧾" };
+
 export function StepChooseType({
   entity,
   mode,
@@ -30,7 +32,7 @@ export function StepChooseType({
         </div>
         <Link
           href="/upload/history"
-          className="flex flex-none items-center gap-1.5 rounded-lg border border-ink-muted/40 px-3 py-2 text-xs font-medium text-ink-secondary hover:bg-section"
+          className="flex flex-none items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-2 text-xs font-medium text-ink-secondary shadow-card hover:bg-section"
         >
           🕒 Import History
         </Link>
@@ -44,11 +46,16 @@ export function StepChooseType({
               key={cfg.entity}
               type="button"
               onClick={() => onChange(cfg.entity, mode)}
-              className={`rounded-xl border p-5 text-left transition-colors ${
-                selected ? "border-brand bg-brand/5 ring-1 ring-brand" : "border-hairline bg-surface hover:border-brand/50"
+              className={`rounded-xl border p-5 text-left transition-all duration-150 ${
+                selected
+                  ? "border-brand bg-brand/5 ring-1 ring-brand"
+                  : "border-hairline bg-surface shadow-card hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-card-hover"
               }`}
             >
-              <p className="text-base font-bold text-ink">{cfg.label}</p>
+              <p className="flex items-center gap-2 text-base font-bold text-ink">
+                <span aria-hidden>{ENTITY_ICON[cfg.entity] ?? "📁"}</span>
+                {cfg.label}
+              </p>
               <p className="mt-1 text-sm text-ink-muted">{cfg.description}</p>
               <p className="mt-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
                 {cfg.fields.filter((f) => f.required).length} required field(s) · {cfg.fields.length} total
@@ -98,13 +105,13 @@ export function StepChooseType({
                   </thead>
                   <tbody>
                     {selectedConfig.fields.map((f) => (
-                      <tr key={f.key} className="border-b border-hairline/50 last:border-0">
+                      <tr key={f.key} className="border-b border-hairline last:border-0">
                         <td className="px-4 py-2.5 font-medium text-ink">{f.label}</td>
                         <td className="px-4 py-2.5">
                           {f.required ? (
                             <span className="rounded-full bg-danger-bg px-2 py-1 text-xs font-semibold text-danger">Required *</span>
                           ) : (
-                            <span className="rounded-full bg-sidebar px-2 py-1 text-xs font-medium text-ink-muted">Optional</span>
+                            <span className="rounded-full bg-section px-2 py-1 text-xs font-medium text-ink-muted">Optional</span>
                           )}
                         </td>
                         <td className="px-4 py-2.5 text-xs text-ink-muted">{f.help ?? "—"}</td>
@@ -129,8 +136,10 @@ export function StepChooseType({
                   key={m.value}
                   type="button"
                   onClick={() => onChange(entity, m.value)}
-                  className={`rounded-xl border p-4 text-left transition-colors ${
-                    selected ? "border-brand bg-brand/5 ring-1 ring-brand" : "border-hairline bg-surface hover:border-brand/50"
+                  className={`rounded-xl border p-4 text-left transition-all duration-150 ${
+                    selected
+                      ? "border-brand bg-brand/5 ring-1 ring-brand"
+                      : "border-hairline bg-surface shadow-card hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-card-hover"
                   }`}
                 >
                   <p className="text-sm font-bold text-ink">{m.label}</p>
@@ -147,7 +156,7 @@ export function StepChooseType({
           type="button"
           disabled={!entity}
           onClick={onNext}
-          className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white shadow-card hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
         >
           Continue
         </button>

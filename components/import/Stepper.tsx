@@ -10,7 +10,7 @@ export const WIZARD_STEPS = [
 
 export function Stepper({ current, furthest, onJump }: { current: number; furthest: number; onJump: (step: number) => void }) {
   return (
-    <ol className="mb-8 flex items-center gap-1 overflow-x-auto rounded-xl border border-hairline bg-surface p-3">
+    <ol className="mb-8 flex items-center gap-1 overflow-x-auto rounded-xl border border-hairline bg-surface p-3 shadow-card">
       {WIZARD_STEPS.map((label, i) => {
         const step = i + 1;
         const isCurrent = step === current;
@@ -24,12 +24,12 @@ export function Stepper({ current, furthest, onJump }: { current: number; furthe
               onClick={() => reachable && onJump(step)}
               className={`flex min-w-[7.5rem] items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors ${
                 isCurrent
-                  ? "bg-brand text-white"
+                  ? "bg-brand text-white shadow-sm"
                   : isDone
                   ? "text-brand hover:bg-brand/10"
                   : reachable
                   ? "text-ink-secondary hover:bg-section"
-                  : "cursor-not-allowed text-ink-muted/60"
+                  : "cursor-not-allowed text-ink-muted/50"
               }`}
             >
               <span
@@ -38,7 +38,7 @@ export function Stepper({ current, furthest, onJump }: { current: number; furthe
                     ? "bg-surface text-brand"
                     : isDone
                     ? "bg-brand text-white"
-                    : "bg-hairline text-ink-muted"
+                    : "bg-section text-ink-muted"
                 }`}
               >
                 {isDone ? "✓" : step}
