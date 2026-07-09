@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
-import { useTheme } from "@/lib/theme";
 
 const LINKS: { href: string; label: string; icon: string; built: boolean }[] = [
   { href: "/masters/customers", label: "Customer Master", icon: "🧑‍💼", built: true },
@@ -22,7 +21,6 @@ const LINKS: { href: string; label: string; icon: string; built: boolean }[] = [
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
 
   function handleSignOut() {
     localStorage.removeItem("isLoggedIn");
@@ -32,17 +30,8 @@ export function Nav() {
 
   return (
     <nav className="flex h-full w-60 flex-none flex-col gap-0.5 border-r border-hairline bg-surface p-4 print:hidden">
-      <div className="mb-4 flex items-center justify-between px-2 py-2">
+      <div className="mb-4 flex items-center px-2 py-2">
         <Logo variant="dark" size="sm" className="items-start" />
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Toggle dark mode"
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="flex h-8 w-8 flex-none items-center justify-center rounded-lg text-base text-ink-muted transition-all duration-150 hover:bg-section hover:text-ink active:scale-90"
-        >
-          <span className="animate-pop-in" key={theme}>{theme === "dark" ? "🌙" : "☀️"}</span>
-        </button>
       </div>
       <div className="h-px bg-hairline mb-2"></div>
       {LINKS.map((l) => {
