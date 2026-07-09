@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { useTheme } from "@/lib/theme";
 
 const LINKS: { href: string; label: string; icon: string; built: boolean }[] = [
-  { href: "/", label: "Home", icon: "🏠", built: true },
-  { href: "/signin", label: "Sign In", icon: "🔐", built: true },
   { href: "/masters/customers", label: "Customer Master", icon: "🧑‍💼", built: true },
   { href: "/masters/gl", label: "GL Master", icon: "📚", built: true },
   { href: "/invoices", label: "Sales Invoices", icon: "🧾", built: true },
@@ -23,7 +21,14 @@ const LINKS: { href: string; label: string; icon: string; built: boolean }[] = [
 
 export function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+
+  function handleSignOut() {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("user");
+    router.push("/signin");
+  }
 
   return (
     <nav className="flex h-full w-60 flex-none flex-col gap-0.5 border-r border-hairline bg-surface p-4 print:hidden">
@@ -71,6 +76,17 @@ export function Nav() {
           </Link>
         );
       })}
+      <div className="mt-auto pt-2">
+        <div className="h-px bg-hairline mb-2" />
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary transition-colors hover:bg-section hover:text-ink"
+        >
+          <span className="text-base">🚪</span>
+          Sign out
+        </button>
+      </div>
     </nav>
   );
 }

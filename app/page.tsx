@@ -1,76 +1,24 @@
-import { isConfigured } from "@/lib/supabase";
-import { PageHeader } from "@/components/PageHeader";
-import { NotConfigured } from "@/components/NotConfigured";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 
 /*
-  The home / "start here" screen. Nothing in this app is pre-built — your team
-  builds every screen on the roadmap below. This page just welcomes you and shows
-  the list. Once you've built the Dashboard, you can make this page redirect to it
-  (or replace this file with your dashboard).
+  The app root just routes you onward: into the Dashboard when you're signed in,
+  or to the Sign In gate when you're not. (The old "start here / roadmap" page is
+  gone now that the app is built and ready to run.)
 */
-
-const ROADMAP = [
-  "Sign In — a front-door login gate",
-  "Customer Master — list customers, add / edit one",
-  "GL Master — the ledger accounts list",
-  "Sales Invoice — List (search + filter by status)",
-  "Sales Invoice — View (read-only detail)",
-  "Sales Invoice — Punch / Edit (create an invoice)",
-  "Sales Invoice — Print Preview (printable page)",
-  "Receipt Entry — record money and knock off invoices",
-  "Upload Report — bulk import from a CSV",
-  "Reminder Template — the chaser email you send",
-  "Auto Email Shoot — chase every overdue customer",
-  "Customer Statement — a running ledger for one customer",
-  "AR Ageing — outstanding split into age buckets",
-  "Cashflow Projection — expected collections, week by week",
-  "Dashboard — the at-a-glance overview tiles",
-];
-
 export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(getCurrentUser() ? "/dashboard" : "/signin");
+  }, [router]);
+
   return (
-    <>
-      <PageHeader
-        title="Welcome — let's build the AR Manager"
-        subtitle="Nothing here is pre-built. You build every screen, one at a time."
-      />
-
-      {!isConfigured && (
-        <div className="mb-6">
-          <NotConfigured />
-        </div>
-      )}
-
-      <div className="rounded-xl border border-hairline bg-surface p-6 shadow-card">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          How this works
-        </h3>
-        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink-secondary">
-          <li>The database and all its data already exist in Supabase — you never touch the backend.</li>
-          <li>You point <span className="font-medium text-brand">Claude Code</span> at a screen from the list; it writes the page, you tweak it in plain English.</li>
-          <li>When a screen works, you commit &amp; push — that scores your team on the live leaderboard.</li>
-          <li>Read <code className="rounded bg-ink/[0.04] px-1">README.md</code> for setup and the kickoff prompt to paste into Claude Code.</li>
-        </ol>
-      </div>
-
-      <div className="mt-6 rounded-xl border border-hairline bg-surface p-6 shadow-card">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          The screens to build
-        </h3>
-        <p className="mt-2 text-sm text-ink-muted">
-          Get as far as you can — a few done well beats all of them half-broken. The
-          spine <span className="font-medium text-ink-secondary">Sign In → Customer Master → Invoice List → Invoice View → Receipt Entry</span> demos best.
-        </p>
-        <ol className="mt-4 grid list-decimal gap-x-8 gap-y-2 pl-5 text-sm text-ink-secondary sm:grid-cols-2">
-          {ROADMAP.map((s) => (
-            <li key={s}>{s}</li>
-          ))}
-        </ol>
-      </div>
-
-      <p className="mt-6 text-sm text-ink-muted">
-        Ready? Tell Claude Code: <span className="font-medium text-ink-secondary">&ldquo;build the Sign In screen.&rdquo;</span>
-      </p>
-    </>
+    <div className="flex h-[60vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand border-t-transparent" />
+    </div>
   );
 }

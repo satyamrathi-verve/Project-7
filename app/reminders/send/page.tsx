@@ -58,11 +58,13 @@ export default function AutoEmailShootPage() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Fetch overdue invoices (open or partial, due_date < today)
+    // Fetch overdue invoices: anything not yet fully paid whose due date has
+    // passed. Past-due invoices carry status 'overdue' (as well as 'open' /
+    // 'partial'), so all three must be included or the 'overdue' ones are missed.
     const { data: invoices } = await supabase
       .from("invoices")
       .select("*")
-      .in("status", ["open", "partial"])
+      .in("status", ["open", "partial", "overdue"])
       .lt("due_date", today)
       .order("due_date", { ascending: true });
 
