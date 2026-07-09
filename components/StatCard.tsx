@@ -26,7 +26,16 @@ function Sparkline({ points, accent }: { points: number[]; accent: Accent }) {
     accent === "green" ? "#059669" : accent === "orange" ? "#d97706" : accent === "red" ? "#dc2626" : accent === "purple" ? "#7c3aed" : "#2563eb";
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-8 w-full" preserveAspectRatio="none">
-      <polyline points={coords} fill="none" stroke={strokeColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline
+        points={coords}
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray={1000}
+        className="animate-draw-line"
+      />
     </svg>
   );
 }
@@ -60,18 +69,18 @@ export function StatCard({
   const displayValue = countTo !== undefined && formatValue ? formatValue(animated) : value;
   return (
     <div
-      className={`group rounded-xl border border-hairline bg-surface p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover ${styles.hoverBorder}`}
+      className={`group rounded-xl border border-hairline bg-surface p-5 shadow-card transition-all duration-[220ms] ease-premium hover:-translate-y-1 hover:shadow-card-hover ${styles.hoverBorder}`}
     >
       <div className="flex items-start justify-between">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${styles.icon}`}>{icon}</div>
+        <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl text-lg ${styles.icon}`}>{icon}</div>
         {trend && (
           <span className={`text-xs font-semibold ${trend.positive ? styles.trendUp : styles.trendDown}`}>
             {trend.positive ? "▲" : "▼"} {trend.label}
           </span>
         )}
       </div>
-      <p className="mt-4 text-2xl font-bold tracking-tight text-ink tabular-nums">{displayValue}</p>
-      <p className="mt-1 text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
+      <p className="mt-4 text-[30px] font-bold leading-none tracking-tight text-ink tabular-nums">{displayValue}</p>
+      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
       {insight && <p className="mt-1 text-[12px] text-ink-muted/80">{insight}</p>}
       {sparkline && (
         <div className="mt-3">

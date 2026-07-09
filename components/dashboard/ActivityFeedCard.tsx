@@ -1,4 +1,6 @@
+import { memo } from "react";
 import { formatMoney, formatDateTime } from "@/lib/format";
+import { DashboardCard } from "./DashboardCard";
 
 export interface ActivityEvent {
   at: string;
@@ -9,36 +11,38 @@ export interface ActivityEvent {
 }
 
 /** Recent payments received + reminders sent, merged into one real activity feed. */
-export function ActivityFeedCard({ events }: { events: ActivityEvent[] }) {
+function ActivityFeedCardImpl({ events }: { events: ActivityEvent[] }) {
   return (
-    <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
-      <h3 className="text-lg font-semibold text-ink">Recent Activity</h3>
-      <p className="text-[13px] text-ink-muted">Payments received and reminders sent</p>
-
+    <DashboardCard title="Recent Activity" subtitle="Payments received and reminders sent">
       {events.length === 0 ? (
-        <p className="mt-6 flex items-center gap-2 text-sm text-ink-muted">
-          <span aria-hidden>🗓️</span>
-          Nothing has happened yet.
-        </p>
+        <div className="flex flex-col items-center gap-2 rounded-lg bg-section/60 px-4 py-8 text-center">
+          <span aria-hidden className="text-2xl">
+            🗓️
+          </span>
+          <p className="text-sm font-medium text-ink-secondary">Nothing has happened yet.</p>
+          <p className="text-[12px] text-ink-muted">Payments and reminders will appear here as they happen.</p>
+        </div>
       ) : (
-        <ul className="mt-4 space-y-4">
+        <ol className="relative ml-3.5 border-l-2 border-hairline">
           {events.map((e, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className={`flex h-8 w-8 flex-none items-center justify-center rounded-full text-sm ${e.iconClass}`}>
+            <li key={i} className="group relative mb-5 rounded-r-lg pb-0.5 pl-5 pr-2 transition-colors duration-150 last:mb-0 hover:bg-black/[0.015]">
+              <span
+                className={`absolute -left-[15px] top-0 flex h-7 w-7 items-center justify-center rounded-full text-sm ring-4 ring-surface transition-transform duration-200 group-hover:scale-110 ${e.iconClass}`}
+              >
                 {e.icon}
               </span>
-              <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-ink">{e.title}</p>
-                <p className="text-[13px] text-ink-muted">{e.detail}</p>
-                <p className="mt-0.5 text-[11px] text-ink-muted/70">{formatDateTime(e.at)}</p>
-              </div>
+              <p className="text-[13px] font-semibold text-ink">{e.title}</p>
+              <p className="text-[13px] text-ink-muted">{e.detail}</p>
+              <p className="mt-0.5 text-[11px] text-ink-muted/70">{formatDateTime(e.at)}</p>
             </li>
           ))}
-        </ul>
+        </ol>
       )}
-    </div>
+    </DashboardCard>
   );
 }
+
+export const ActivityFeedCard = memo(ActivityFeedCardImpl);
 
 export function buildActivityEvents(params: {
   receipts: { receipt_date: string; amount: number; mode: string; customerName: string }[];

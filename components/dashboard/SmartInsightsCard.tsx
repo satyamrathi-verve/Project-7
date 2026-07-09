@@ -1,4 +1,9 @@
+"use client";
+
+import { memo, useState } from "react";
 import type { InsightSeverity } from "@/lib/collectionHealth";
+import { DashboardCard } from "./DashboardCard";
+import { Icon } from "./Primitives";
 
 export interface DashboardInsight {
   icon: string;
@@ -18,39 +23,53 @@ const SEVERITY_STYLE: Record<InsightSeverity, { border: string; bg: string; titl
   Rule-based observations computed from real invoice/customer/receipt data
   (see the dashboard page's useMemo model) — styled like an "AI insights"
   panel since that's the clearest way to scan several at once. Not an LLM call.
+  Dismiss is a session-only UI convenience (nothing is stored) — the same
+  insight reappears next visit if the underlying numbers still trigger it.
 */
-export function SmartInsightsCard({ insights }: { insights: DashboardInsight[] }) {
-  return (
-    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50/50 to-surface p-5 shadow-card">
-      <h3 className="flex items-center gap-2 text-lg font-semibold text-ink">
-        <span aria-hidden>✨</span>
-        Smart Insights
-      </h3>
-      <p className="text-[13px] text-ink-muted">What changed, and what to do next</p>
+function SmartInsightsCardImpl({ insights }: { insights: DashboardInsight[] }) {
+  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
+  const visible = insights.map((insight, i) => ({ insight, i })).filter(({ i }) => !dismissed.has(i));
 
-      {insights.length === 0 ? (
-        <p className="mt-6 text-sm text-ink-muted">No notable signals right now.</p>
+  return (
+    <DashboardCard
+      icon={<span aria-hidden>✨</span>}
+      title="Smart Insights"
+      subtitle="What changed, and what to do next"
+      className="border-violet-100 bg-gradient-to-br from-violet-50/50 to-surface"
+    >
+      {visible.length === 0 ? (
+        <p className="text-sm text-ink-muted">
+          {insights.length === 0 ? "No notable signals right now." : "All caught up — insights dismissed for this session."}
+        </p>
       ) : (
-        <ul className="mt-4 space-y-2.5">
-          {insights.map((insight, i) => {
+        <ul className="space-y-2.5">
+          {visible.map(({ insight, i }) => {
             const style = SEVERITY_STYLE[insight.severity];
             return (
               <li
                 key={i}
-                className={`flex items-start gap-2.5 rounded-r-lg border-l-4 ${style.border} ${style.bg} px-3.5 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card`}
+                className={`group/insight flex items-start gap-2.5 rounded-r-lg border-l-4 ${style.border} ${style.bg} px-3.5 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card`}
               >
-                <span aria-hidden className="mt-0.5 flex-none text-[15px] leading-none">
-                  {insight.icon}
-                </span>
-                <div className="min-w-0">
+                <Icon className="mt-0.5">{insight.icon}</Icon>
+                <div className="min-w-0 flex-1">
                   <p className={`text-[13px] font-semibold ${style.title}`}>{insight.title}</p>
                   <p className="mt-0.5 text-[13px] text-ink-secondary">{insight.text}</p>
                 </div>
+                <button
+                  onClick={() => setDismissed((prev) => new Set(prev).add(i))}
+                  aria-label={`Dismiss insight: ${insight.title}`}
+                  title="Dismiss"
+                  className="flex-none rounded p-1 text-ink-muted opacity-0 transition-opacity duration-150 hover:bg-black/[0.05] hover:text-ink focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 group-hover/insight:opacity-100"
+                >
+                  ✕
+                </button>
               </li>
             );
           })}
         </ul>
       )}
-    </div>
+    </DashboardCard>
   );
 }
+
+export const SmartInsightsCard = memo(SmartInsightsCardImpl);

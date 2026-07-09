@@ -1,8 +1,10 @@
+import { memo } from "react";
 import Link from "next/link";
 import type { InvoiceStatus } from "@/lib/types";
 import { STATUS_BADGE, STATUS_LABEL } from "@/lib/statusStyles";
 import { DataTable, type Column } from "@/components/DataTable";
 import { formatMoney, formatDate } from "@/lib/format";
+import { DashboardCard } from "./DashboardCard";
 
 export interface RecentInvoiceRow {
   id: string;
@@ -16,13 +18,15 @@ export interface RecentInvoiceRow {
   effectiveStatus: InvoiceStatus;
 }
 
-export function RecentInvoicesCard({ rows }: { rows: RecentInvoiceRow[] }) {
+const FOCUS_RING = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-1";
+
+function RecentInvoicesCardImpl({ rows }: { rows: RecentInvoiceRow[] }) {
   const columns: Column<RecentInvoiceRow>[] = [
     {
       key: "invoiceNo",
       header: "Invoice #",
       render: (r) => (
-        <Link href={`/invoices/${r.id}`} className="font-medium text-brand hover:underline">
+        <Link href={`/invoices/${r.id}`} className={`rounded font-medium text-brand hover:underline ${FOCUS_RING}`}>
           {r.invoiceNo}
         </Link>
       ),
@@ -50,17 +54,18 @@ export function RecentInvoicesCard({ rows }: { rows: RecentInvoiceRow[] }) {
   ];
 
   return (
-    <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-ink">Recent Invoices</h3>
-          <p className="text-[13px] text-ink-muted">The 10 most recently raised invoices</p>
-        </div>
-        <Link href="/invoices" className="text-sm font-medium text-brand hover:underline">
+    <DashboardCard
+      title="Recent Invoices"
+      subtitle="The 10 most recently raised invoices"
+      action={
+        <Link href="/invoices" className={`rounded text-sm font-medium text-brand hover:underline ${FOCUS_RING}`}>
           View all →
         </Link>
-      </div>
+      }
+    >
       <DataTable columns={columns} rows={rows} empty="No invoices yet." />
-    </div>
+    </DashboardCard>
   );
 }
+
+export const RecentInvoicesCard = memo(RecentInvoicesCardImpl);

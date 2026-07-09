@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatMoney } from "@/lib/format";
 
 export interface DonutSegment {
@@ -8,7 +9,7 @@ export interface DonutSegment {
 }
 
 /** Simple multi-segment donut built from stroke-dasharray arcs — no chart library. */
-export function DistributionDonut({ segments, centerLabel }: { segments: DonutSegment[]; centerLabel: string }) {
+function DistributionDonutImpl({ segments, centerLabel }: { segments: DonutSegment[]; centerLabel: string }) {
   const total = segments.reduce((s, seg) => s + seg.value, 0);
   const size = 140;
   const stroke = 20;
@@ -45,6 +46,7 @@ export function DistributionDonut({ segments, centerLabel }: { segments: DonutSe
                   fill="none"
                   strokeDasharray={dashArray}
                   strokeDashoffset={dashOffset}
+                  className="cursor-pointer transition-opacity duration-150 hover:opacity-80"
                 >
                   <title>
                     {seg.label}: {formatMoney(seg.value)} ({Math.round(fraction * 100)}%)
@@ -58,7 +60,7 @@ export function DistributionDonut({ segments, centerLabel }: { segments: DonutSe
           <span className="text-sm font-bold text-ink">{centerLabel}</span>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {segments.map((seg) => (
           <div key={seg.label} className="flex items-center gap-2 text-[12px]">
             <span className={`h-2.5 w-2.5 flex-none rounded-sm ${seg.colorClass}`} />
@@ -72,3 +74,5 @@ export function DistributionDonut({ segments, centerLabel }: { segments: DonutSe
     </div>
   );
 }
+
+export const DistributionDonut = memo(DistributionDonutImpl);

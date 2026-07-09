@@ -25,7 +25,7 @@ export function DataTable<T extends { id: string }>({
     <div className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-card">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-hairline bg-section text-left">
+          <tr className="sticky top-0 z-10 border-b border-hairline bg-section text-left">
             {columns.map((c) => (
               <th key={c.key} className={`px-4 py-3 font-medium text-ink-secondary ${c.className ?? ""}`}>
                 {c.header}
@@ -41,8 +41,13 @@ export function DataTable<T extends { id: string }>({
               </td>
             </tr>
           ) : (
-            rows.map((row) => (
-              <tr key={row.id} className="border-b border-hairline/70 transition-colors duration-150 last:border-0 hover:bg-black/[0.015]">
+            rows.map((row, i) => (
+              <tr
+                key={row.id}
+                className={`border-b border-hairline/70 transition-colors duration-150 last:border-0 hover:bg-info/[0.035] ${
+                  i % 2 === 1 ? "bg-black/[0.008]" : ""
+                }`}
+              >
                 {columns.map((c) => (
                   <td key={c.key} className={`px-4 py-3 text-ink-secondary ${c.className ?? ""}`}>
                     {c.render ? c.render(row) : String((row as Record<string, unknown>)[c.key] ?? "")}

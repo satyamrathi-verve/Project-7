@@ -23,6 +23,8 @@ import { ActivityFeedCard, buildActivityEvents } from "@/components/dashboard/Ac
 import { AgeingSummaryCards, type AgeingSummaryItem } from "@/components/dashboard/AgeingSummaryCards";
 import { CustomerHealthCard, type HealthSegment } from "@/components/dashboard/CustomerHealthCard";
 import { QuickActionsFab } from "@/components/dashboard/QuickActionsFab";
+import { DashboardCard } from "@/components/dashboard/DashboardCard";
+import { Skeleton } from "@/components/dashboard/Primitives";
 
 type InvoiceRow = Invoice & { customers: { name: string; code: string; phone: string | null } | null };
 
@@ -426,14 +428,22 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-9 w-72 animate-pulse rounded-lg bg-black/[0.04]" />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mx-auto max-w-[1400px] space-y-8">
+        <Skeleton className="h-10 w-80" />
+        <Skeleton className="h-24 w-full" />
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-black/[0.04]" />
+            <Skeleton key={i} className="h-32" />
           ))}
         </div>
-        <div className="h-64 animate-pulse rounded-xl bg-black/[0.04]" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Skeleton className="h-56" />
+          <Skeleton className="h-56" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[7fr_3fr]">
+          <Skeleton className="h-96" />
+          <Skeleton className="h-96" />
+        </div>
       </div>
     );
   }
@@ -447,27 +457,30 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1400px] pb-24">
-      <PageHeader
-        title="Finance Intelligence Dashboard"
-        subtitle={lastUpdated ? `Last updated ${formatDateTime(lastUpdated.toISOString())}` : undefined}
-        action={
-          <button
-            onClick={load}
-            className="rounded-lg border border-hairline bg-surface px-3 py-1.5 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.03]"
-          >
-            ↻ Refresh
-          </button>
-        }
-      />
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[40px] font-bold leading-tight tracking-tight text-ink">Finance Intelligence Dashboard</h1>
+          {lastUpdated && (
+            <p className="mt-1.5 text-[13px] text-ink-muted">Last updated {formatDateTime(lastUpdated.toISOString())}</p>
+          )}
+        </div>
+        <button
+          onClick={load}
+          aria-label="Refresh dashboard data"
+          className="rounded-lg border border-hairline bg-surface px-3.5 py-2 text-sm font-medium text-ink-secondary transition-all duration-150 hover:-translate-y-0.5 hover:border-brand/20 hover:bg-black/[0.02] hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+        >
+          ↻ Refresh
+        </button>
+      </div>
 
       {error && (
         <p className="mb-4 rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>
       )}
 
       {/* Welcome */}
-      <div className="mb-6 rounded-xl border border-hairline bg-gradient-to-br from-brand-light/60 to-surface p-5 shadow-card">
-        <h2 className="text-xl font-semibold text-ink">{greeting} 👋</h2>
-        <p className="mt-1 text-[14px] text-ink-secondary">
+      <div className="mb-8 rounded-xl border border-hairline bg-gradient-to-br from-brand-light/60 to-surface p-5 shadow-card">
+        <h2 className="text-[22px] font-semibold text-ink">{greeting} 👋</h2>
+        <p className="mt-1.5 text-[15px] text-ink-secondary">
           You have <span className="font-semibold text-ink">{formatMoney(model.totalOutstanding)}</span> outstanding across{" "}
           <span className="font-semibold text-ink">{model.openInvoicesCount + model.overdueCount}</span> invoices.{" "}
           {model.attentionCount > 0 ? (
@@ -479,7 +492,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard
           icon="💰"
           label="Total Outstanding"
@@ -541,14 +554,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Analytics */}
-      <div className="mb-3 mt-8 flex items-center justify-between">
+      <div className="mb-4 mt-10 flex items-center justify-between">
         <h2 className="text-[22px] font-semibold text-ink">Analytics</h2>
         <div className="flex gap-1 rounded-lg border border-hairline bg-section p-0.5">
           {RANGE_OPTIONS.map((opt) => (
             <button
               key={opt.months}
               onClick={() => setRangeMonths(opt.months)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 ${
+              aria-pressed={rangeMonths === opt.months}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 ${
                 rangeMonths === opt.months ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink-secondary"
               }`}
             >
@@ -559,52 +573,36 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
-          <h3 className="text-lg font-semibold text-ink">Outstanding Trend</h3>
-          <p className="text-[13px] text-ink-muted">Running receivable balance, month-end</p>
-          <div className="mt-4">
-            <OutstandingTrendChart points={rangeSlice(model.outstandingTrend)} />
-          </div>
-        </div>
-        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
-          <h3 className="text-lg font-semibold text-ink">Collections vs Invoiced</h3>
-          <p className="text-[13px] text-ink-muted">Real amounts raised vs collected, per month</p>
-          <div className="mt-4">
-            <CollectionsChart points={rangeSlice(model.collectionsSeries)} />
-          </div>
-        </div>
+        <DashboardCard title="Outstanding Trend" subtitle="Running receivable balance, month-end">
+          <OutstandingTrendChart points={rangeSlice(model.outstandingTrend)} />
+        </DashboardCard>
+        <DashboardCard title="Collections vs Invoiced" subtitle="Real amounts raised vs collected, per month">
+          <CollectionsChart points={rangeSlice(model.collectionsSeries)} />
+        </DashboardCard>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
-        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
-          <h3 className="text-lg font-semibold text-ink">Invoice Ageing</h3>
-          <p className="text-[13px] text-ink-muted">Outstanding value by days overdue</p>
-          <div className="mt-4">
-            <AgeingChart
-              buckets={[
-                { label: "Not due", value: model.buckets.notDue, colorClass: "bg-info" },
-                { label: "0–30 days", value: model.buckets.b0_30, colorClass: "bg-warning/50" },
-                { label: "31–60 days", value: model.buckets.b31_60, colorClass: "bg-warning" },
-                { label: "61–90 days", value: model.buckets.b61_90, colorClass: "bg-danger/60" },
-                { label: "90+ days", value: model.buckets.b90plus, colorClass: "bg-danger" },
-              ]}
-            />
-          </div>
-        </div>
-        <div className="rounded-xl border border-hairline bg-surface p-5 shadow-card">
-          <h3 className="text-lg font-semibold text-ink">Receivable Distribution</h3>
-          <p className="text-[13px] text-ink-muted">By invoice value</p>
-          <div className="mt-4">
-            <DistributionDonut
-              centerLabel={`₹${(model.paidAmount + model.openAmount + model.overdueAmount).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
-              segments={[
-                { label: "Paid", value: model.paidAmount, color: "#059669", colorClass: "bg-success" },
-                { label: "Open", value: model.openAmount, color: "#4F46E5", colorClass: "bg-info" },
-                { label: "Overdue", value: model.overdueAmount, color: "#DC2626", colorClass: "bg-danger" },
-              ]}
-            />
-          </div>
-        </div>
+        <DashboardCard title="Invoice Ageing" subtitle="Outstanding value by days overdue">
+          <AgeingChart
+            buckets={[
+              { label: "Not due", value: model.buckets.notDue, colorClass: "bg-info" },
+              { label: "0–30 days", value: model.buckets.b0_30, colorClass: "bg-warning/50" },
+              { label: "31–60 days", value: model.buckets.b31_60, colorClass: "bg-warning" },
+              { label: "61–90 days", value: model.buckets.b61_90, colorClass: "bg-danger/60" },
+              { label: "90+ days", value: model.buckets.b90plus, colorClass: "bg-danger" },
+            ]}
+          />
+        </DashboardCard>
+        <DashboardCard title="Receivable Distribution" subtitle="By invoice value">
+          <DistributionDonut
+            centerLabel={`₹${(model.paidAmount + model.openAmount + model.overdueAmount).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
+            segments={[
+              { label: "Paid", value: model.paidAmount, color: "#059669", colorClass: "bg-success" },
+              { label: "Open", value: model.openAmount, color: "#4F46E5", colorClass: "bg-info" },
+              { label: "Overdue", value: model.overdueAmount, color: "#DC2626", colorClass: "bg-danger" },
+            ]}
+          />
+        </DashboardCard>
       </div>
 
       {/* Ageing summary tiles */}

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatMoney } from "@/lib/format";
 
 /*
@@ -5,7 +6,7 @@ import { formatMoney } from "@/lib/format";
   from real invoice totals minus real allocations up to that date (no
   snapshot table needed; it's just cumulative arithmetic on real rows).
 */
-export function OutstandingTrendChart({ points }: { points: { label: string; value: number }[] }) {
+function OutstandingTrendChartImpl({ points }: { points: { label: string; value: number }[] }) {
   if (points.length < 2) {
     return <p className="text-sm text-ink-muted">Not enough history yet.</p>;
   }
@@ -17,20 +18,49 @@ export function OutstandingTrendChart({ points }: { points: { label: string; val
   const coords = points.map((p, i) => [i * step, h - (p.value / max) * (h - 10)] as const);
   const linePoints = coords.map(([x, y]) => `${x},${y}`).join(" ");
   const areaPoints = `0,${h} ${linePoints} ${w},${h}`;
+  // Generous upper bound on path length so the draw-in animation always completes fully.
+  const pathLength = coords.reduce((acc, [x, y], i) => {
+    if (i === 0) return 0;
+    const [px, py] = coords[i - 1];
+    return acc + Math.hypot(x - px, y - py);
+  }, 0);
+  const dash = Math.ceil(pathLength) + 10;
 
   return (
     <div>
       <svg viewBox={`0 0 ${w} ${h}`} className="h-40 w-full overflow-visible" preserveAspectRatio="none">
         <defs>
           <linearGradient id="outstandingFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3F51B5" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#3F51B5" stopOpacity="0" />
+            <stop offset="0%" stopColor="#3B5998" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#3B5998" stopOpacity="0" />
           </linearGradient>
         </defs>
+        {/* Subtle horizontal gridlines for an axis feel */}
+        {[0.25, 0.5, 0.75].map((f) => (
+          <line key={f} x1={0} x2={w} y1={h * f} y2={h * f} stroke="#E5E7EB" strokeWidth={1} strokeDasharray="4 4" />
+        ))}
         <polygon points={areaPoints} fill="url(#outstandingFill)" />
-        <polyline points={linePoints} fill="none" stroke="#3F51B5" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        <polyline
+          points={linePoints}
+          fill="none"
+          stroke="#3B5998"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={dash}
+          strokeDashoffset={dash}
+          className="animate-draw-line"
+        />
         {coords.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={i === coords.length - 1 ? 4 : 2.5} fill="#3F51B5" opacity={i === coords.length - 1 ? 1 : 0.5}>
+          <circle
+            key={i}
+            cx={x}
+            cy={y}
+            r={i === coords.length - 1 ? 4 : 2.5}
+            fill="#3B5998"
+            opacity={i === coords.length - 1 ? 1 : 0.5}
+            className="cursor-pointer [transform-box:fill-box] [transform-origin:center] transition-transform duration-150 hover:scale-125"
+          >
             <title>
               {points[i].label}: {formatMoney(points[i].value)}
             </title>
@@ -47,3 +77,5 @@ export function OutstandingTrendChart({ points }: { points: { label: string; val
     </div>
   );
 }
+
+export const OutstandingTrendChart = memo(OutstandingTrendChartImpl);

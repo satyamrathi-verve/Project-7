@@ -13,7 +13,7 @@ export function AgeingSummaryCards({ items }: { items: AgeingSummaryItem[] }) {
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-xl border border-hairline bg-surface p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover"
+          className="rounded-xl border border-hairline bg-surface p-4 shadow-card transition-all duration-[220ms] ease-premium hover:-translate-y-1 hover:border-brand/20 hover:shadow-card-hover"
         >
           <span className={`inline-block h-2 w-2 rounded-full ${item.colorClass}`} />
           <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ink-muted">{item.label}</p>

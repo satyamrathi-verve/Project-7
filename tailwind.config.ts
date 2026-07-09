@@ -34,9 +34,32 @@ const config: Config = {
         info: { DEFAULT: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE" },
       },
       boxShadow: {
-        // Soft, printed-paper elevation — no hard edges or glow.
-        card: "0 1px 2px rgba(17, 24, 39, 0.04), 0 6px 16px -6px rgba(17, 24, 39, 0.07)",
-        "card-hover": "0 2px 4px rgba(17, 24, 39, 0.05), 0 14px 28px -8px rgba(17, 24, 39, 0.12)",
+        // Soft, printed-paper elevation — no hard edges or glow. One layered
+        // shadow used everywhere a card sits at rest, and one for hover/lift.
+        card: "0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.05), 0 18px 50px rgba(15, 23, 42, 0.06)",
+        "card-hover": "0 2px 4px rgba(15, 23, 42, 0.05), 0 10px 24px rgba(15, 23, 42, 0.08), 0 24px 60px rgba(15, 23, 42, 0.10)",
+      },
+      transitionTimingFunction: {
+        premium: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      },
+      keyframes: {
+        drawLine: {
+          from: { strokeDashoffset: "1000" },
+          to: { strokeDashoffset: "0" },
+        },
+        fadeInUp: {
+          from: { opacity: "0", transform: "translateY(4px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        shimmer: {
+          from: { backgroundPosition: "-200% 0" },
+          to: { backgroundPosition: "200% 0" },
+        },
+      },
+      animation: {
+        "draw-line": "drawLine 1s ease-premium forwards",
+        "fade-in-up": "fadeInUp 300ms ease-premium both",
+        shimmer: "shimmer 1.6s ease-in-out infinite",
       },
     },
   },

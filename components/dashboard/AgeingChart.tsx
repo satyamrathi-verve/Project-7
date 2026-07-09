@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { formatMoney } from "@/lib/format";
 
 export interface AgeingBucket {
@@ -7,7 +8,7 @@ export interface AgeingBucket {
 }
 
 /** Single stacked bar showing how outstanding value is spread across ageing buckets. */
-export function AgeingChart({ buckets }: { buckets: AgeingBucket[] }) {
+function AgeingChartImpl({ buckets }: { buckets: AgeingBucket[] }) {
   const total = buckets.reduce((s, b) => s + b.value, 0);
 
   if (total <= 0) {
@@ -16,13 +17,13 @@ export function AgeingChart({ buckets }: { buckets: AgeingBucket[] }) {
 
   return (
     <div>
-      <div className="flex h-8 w-full overflow-hidden rounded-lg">
+      <div className="flex h-8 w-full gap-0.5 overflow-hidden rounded-lg">
         {buckets
           .filter((b) => b.value > 0)
           .map((b) => (
             <div
               key={b.label}
-              className={`h-full transition-all duration-500 ${b.colorClass}`}
+              className={`h-full cursor-pointer transition-all duration-500 ease-premium hover:brightness-110 ${b.colorClass}`}
               style={{ width: `${(b.value / total) * 100}%` }}
               title={`${b.label}: ${formatMoney(b.value)}`}
             />
@@ -40,3 +41,5 @@ export function AgeingChart({ buckets }: { buckets: AgeingBucket[] }) {
     </div>
   );
 }
+
+export const AgeingChart = memo(AgeingChartImpl);
