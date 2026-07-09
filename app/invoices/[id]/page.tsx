@@ -3,53 +3,59 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase, isConfigured } from "@/lib/supabase";
-import type { Invoice } from "@/lib/types";
+import type { Customer, Invoice, InvoiceItem } from "@/lib/types";
 import { PageHeader } from "@/components/PageHeader";
 import { NotConfigured } from "@/components/NotConfigured";
-import { FormField, inputClass } from "@/components/FormField";
+import { InvoiceForm, type InvoiceFormValues } from "@/components/InvoiceForm";
 
 export default function InvoiceEditPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [initialValues, setInitialValues] = useState<InvoiceFormValues | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadInvoice() {
-    if (!supabase) return;
-    setLoading(true);
-    const { data, error } = await supabase.from("invoices").select("*").eq("id", params.id).single();
-    if (error) setError(error.message);
-    else setInvoice(data as Invoice);
-    setLoading(false);
-  }
-
   useEffect(() => {
-    loadInvoice();
-  }, [params.id]);
+    async function load() {
+      if (!supabase) return;
+      setLoading(true);
+      setError(null);
 
-  async function handleSave() {
-    if (!supabase || !invoice) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from("invoices")
-      .update({
-        invoice_no: invoice.invoice_no,
-        invoice_date: invoice.invoice_date,
-        due_date: invoice.due_date,
-        total: invoice.total,
+      const [invRes, itemsRes, custRes] = await Promise.all([
+        supabase.from("invoices").select("*").eq("id", params.id).single(),
+        supabase.from("invoice_items").select("*").eq("invoice_id", params.id).order("id"),
+        supabase.from("customers").select("*").order("name", { ascending: true }),
+      ]);
+
+      if (invRes.error || !invRes.data) {
+        setError(invRes.error?.message ?? "Invoice not found.");
+        setLoading(false);
+        return;
+      }
+
+      const invoice = invRes.data as Invoice;
+      const items = (itemsRes.data as InvoiceItem[]) ?? [];
+      const taxPercent =
+        Number(invoice.subtotal) > 0 ? ((Number(invoice.tax_amount) / Number(invoice.subtotal)) * 100).toFixed(2) : "18";
+
+      setCustomers((custRes.data as Customer[]) ?? []);
+      setInitialValues({
+        invoiceNo: invoice.invoice_no,
+        customerId: invoice.customer_id,
+        invoiceDate: invoice.invoice_date.slice(0, 10),
+        dueDate: invoice.due_date.slice(0, 10),
+        taxPercent,
+        notes: invoice.notes ?? "",
         status: invoice.status,
-      })
-      .eq("id", invoice.id);
-    setSaving(false);
-
-    if (error) {
-      setError(error.message);
-      return;
+        items:
+          items.length > 0
+            ? items.map((it) => ({ description: it.description, qty: String(it.qty), rate: String(it.rate) }))
+            : [{ description: "", qty: "1", rate: "" }],
+      });
+      setLoading(false);
     }
-
-    router.push("/invoices");
-  }
+    load();
+  }, [params.id]);
 
   if (!isConfigured) {
     return (
@@ -62,81 +68,22 @@ export default function InvoiceEditPage({ params }: { params: { id: string } }) 
 
   return (
     <>
-      <PageHeader title="Edit Invoice" subtitle="Edit the selected sales invoice." />
+      <PageHeader title="Edit Invoice" subtitle="Customer, line items, and tax — same form as creating one." />
       {loading ? (
-        <p className="text-sm text-slate-400">Loading invoice…</p>
-      ) : !invoice ? (
-        <p className="text-sm text-slate-500">Invoice not found.</p>
+        <p className="text-sm text-ink-muted">Loading invoice…</p>
+      ) : error || !initialValues ? (
+        <p className="rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">
+          {error ?? "Invoice not found."}
+        </p>
       ) : (
-        <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-
-          <FormField label="Invoice No">
-            <input
-              className={inputClass}
-              value={invoice.invoice_no}
-              onChange={(e) => setInvoice({ ...invoice, invoice_no: e.target.value })}
-            />
-          </FormField>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Invoice Date">
-              <input
-                type="date"
-                className={inputClass}
-                value={invoice.invoice_date}
-                onChange={(e) => setInvoice({ ...invoice, invoice_date: e.target.value })}
-              />
-            </FormField>
-            <FormField label="Due Date">
-              <input
-                type="date"
-                className={inputClass}
-                value={invoice.due_date}
-                onChange={(e) => setInvoice({ ...invoice, due_date: e.target.value })}
-              />
-            </FormField>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Total">
-              <input
-                type="number"
-                className={inputClass}
-                value={invoice.total}
-                onChange={(e) => setInvoice({ ...invoice, total: Number(e.target.value) })}
-              />
-            </FormField>
-            <FormField label="Status">
-              <select
-                className={inputClass}
-                value={invoice.status}
-                onChange={(e) => setInvoice({ ...invoice, status: e.target.value as Invoice["status"] })}
-              >
-                <option value="open">open</option>
-                <option value="partial">partial</option>
-                <option value="paid">paid</option>
-                <option value="overdue">overdue</option>
-              </select>
-            </FormField>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => router.push("/invoices")}
-              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Save"}
-            </button>
-          </div>
-        </div>
+        <InvoiceForm
+          customers={customers}
+          mode="edit"
+          invoiceId={params.id}
+          initialValues={initialValues}
+          onSaved={() => router.push("/invoices")}
+          onCancel={() => router.push("/invoices")}
+        />
       )}
     </>
   );

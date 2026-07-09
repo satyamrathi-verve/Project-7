@@ -105,10 +105,10 @@ function amountInWords(amount: number): string {
 type PaymentStatus = "Paid" | "Partially Paid" | "Unpaid" | "Overdue";
 
 const STATUS_STYLE: Record<PaymentStatus, string> = {
-  Paid: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  "Partially Paid": "bg-blue-50 text-blue-700 ring-blue-200",
-  Unpaid: "bg-amber-50 text-amber-700 ring-amber-200",
-  Overdue: "bg-red-50 text-red-700 ring-red-200",
+  Paid: "bg-success-bg text-success ring-success-border",
+  "Partially Paid": "bg-info-bg text-info ring-info-border",
+  Unpaid: "bg-warning-bg text-warning ring-warning-border",
+  Overdue: "bg-danger-bg text-danger ring-danger-border",
 };
 
 // Derive the payment status from real figures: what's been allocated against the
@@ -204,11 +204,11 @@ export default function InvoicePrintPage() {
 
   if (!isConfigured) return <NotConfigured />;
 
-  if (loading) return <p className="text-sm text-slate-400">Loading invoice…</p>;
+  if (loading) return <p className="text-sm text-ink-muted">Loading invoice…</p>;
 
   if (error || !data) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+      <div className="rounded-xl border border-danger-border bg-danger-bg p-6 text-sm text-danger">
         <p className="font-medium">Couldn&apos;t open this invoice.</p>
         <p className="mt-1">{error ?? "Unknown error."}</p>
         <Link href="/invoices" className="mt-3 inline-block font-medium text-brand hover:underline">
@@ -284,19 +284,19 @@ export default function InvoicePrintPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/invoices"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-black/[0.04]"
           >
             ← Back
           </Link>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Invoice</p>
-            <p className="text-sm font-bold text-slate-900">{invoice.invoice_no}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Invoice</p>
+            <p className="text-sm font-bold text-ink">{invoice.invoice_no}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => window.print()}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink-secondary hover:bg-section"
           >
             ⬇ Download PDF
           </button>
@@ -316,9 +316,9 @@ export default function InvoicePrintPage() {
       </div>
 
       {/* A4 paper */}
-      <div className="invoice-paper mx-auto w-full max-w-[210mm] rounded-sm bg-white p-10 text-slate-800 shadow-xl ring-1 ring-slate-200">
+      <div className="invoice-paper mx-auto w-full max-w-[210mm] rounded-sm bg-surface p-10 text-ink shadow-xl ring-1 ring-hairline">
         {/* Header: company + TAX INVOICE */}
-        <div className="flex items-start justify-between gap-6 border-b border-slate-200 pb-6">
+        <div className="flex items-start justify-between gap-6 border-b border-hairline pb-6">
           <div className="flex items-start gap-4">
             <div className="flex h-16 w-16 flex-none items-center justify-center rounded-xl bg-brand text-xl font-bold text-white">
               {(company?.name ?? "AR")
@@ -329,9 +329,9 @@ export default function InvoicePrintPage() {
                 .toUpperCase()}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{company?.name ?? "Your Company"}</h1>
-              {company?.address && <p className="mt-1 max-w-xs text-sm text-slate-500">{company.address}</p>}
-              <div className="mt-2 space-y-0.5 text-xs text-slate-500">
+              <h1 className="text-xl font-bold text-ink">{company?.name ?? "Your Company"}</h1>
+              {company?.address && <p className="mt-1 max-w-xs text-sm text-ink-muted">{company.address}</p>}
+              <div className="mt-2 space-y-0.5 text-xs text-ink-muted">
                 {company?.gstin && <p>GSTIN: {company.gstin}</p>}
                 {company?.email && <p>{company.email}</p>}
                 {company?.phone && <p>{company.phone}</p>}
@@ -339,7 +339,7 @@ export default function InvoicePrintPage() {
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">TAX INVOICE</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">TAX INVOICE</h2>
             <span
               className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ${STATUS_STYLE[status]}`}
             >
@@ -351,11 +351,11 @@ export default function InvoicePrintPage() {
         {/* Bill To + Invoice Details */}
         <div className="grid grid-cols-2 gap-8 py-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bill To</p>
-            <p className="mt-2 text-base font-bold text-slate-900">{customer?.name ?? "—"}</p>
-            {customer?.code && <p className="text-xs font-medium text-slate-500">Customer Code: {customer.code}</p>}
-            {customer?.address && <p className="mt-1 text-sm text-slate-500">{customer.address}</p>}
-            <div className="mt-2 space-y-0.5 text-xs text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Bill To</p>
+            <p className="mt-2 text-base font-bold text-ink">{customer?.name ?? "—"}</p>
+            {customer?.code && <p className="text-xs font-medium text-ink-muted">Customer Code: {customer.code}</p>}
+            {customer?.address && <p className="mt-1 text-sm text-ink-muted">{customer.address}</p>}
+            <div className="mt-2 space-y-0.5 text-xs text-ink-muted">
               {customer?.gstin && <p>GSTIN: {customer.gstin}</p>}
               {supply && (
                 <p>
@@ -367,45 +367,45 @@ export default function InvoicePrintPage() {
               {customer?.email && <p>{customer.email}</p>}
             </div>
           </div>
-          <div className="rounded-xl bg-slate-50 p-5">
+          <div className="rounded-xl bg-section p-5">
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-slate-500">Invoice No</dt>
-                <dd className="font-semibold text-slate-900">{invoice.invoice_no}</dd>
+                <dt className="text-ink-muted">Invoice No</dt>
+                <dd className="font-semibold text-ink">{invoice.invoice_no}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-slate-500">Invoice Date</dt>
-                <dd className="text-slate-800">{formatDate(invoice.invoice_date)}</dd>
+                <dt className="text-ink-muted">Invoice Date</dt>
+                <dd className="text-ink">{formatDate(invoice.invoice_date)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-slate-500">Due Date</dt>
-                <dd className="text-slate-800">{formatDate(invoice.due_date)}</dd>
+                <dt className="text-ink-muted">Due Date</dt>
+                <dd className="text-ink">{formatDate(invoice.due_date)}</dd>
               </div>
               {po.number && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">PO No</dt>
-                  <dd className="text-slate-800">{po.number}</dd>
+                  <dt className="text-ink-muted">PO No</dt>
+                  <dd className="text-ink">{po.number}</dd>
                 </div>
               )}
               {po.date && (
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">PO Date</dt>
-                  <dd className="text-slate-800">{po.date}</dd>
+                  <dt className="text-ink-muted">PO Date</dt>
+                  <dd className="text-ink">{po.date}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-slate-500">Payment Terms</dt>
-                <dd className="text-slate-800">{paymentTerms}</dd>
+                <dt className="text-ink-muted">Payment Terms</dt>
+                <dd className="text-ink">{paymentTerms}</dd>
               </div>
             </dl>
           </div>
         </div>
 
         {/* Item table */}
-        <div className="overflow-hidden rounded-xl border border-slate-200">
+        <div className="overflow-hidden rounded-xl border border-hairline">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="bg-section text-left text-xs uppercase tracking-wide text-ink-muted">
                 <th className="px-3 py-2 font-semibold">#</th>
                 <th className="px-3 py-2 font-semibold">Item Description</th>
                 <th className="px-3 py-2 font-semibold">HSN/SAC</th>
@@ -420,7 +420,7 @@ export default function InvoicePrintPage() {
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center text-slate-400">
+                  <td colSpan={9} className="px-3 py-8 text-center text-ink-muted">
                     No line items on this invoice.
                   </td>
                 </tr>
@@ -429,16 +429,16 @@ export default function InvoicePrintPage() {
                   const lineAmount = Number(it.amount);
                   const lineTax = lineAmount * effectiveRate;
                   return (
-                    <tr key={it.id} className="border-t border-slate-100">
-                      <td className="px-3 py-2 text-slate-500">{i + 1}</td>
-                      <td className="px-3 py-2 font-medium text-slate-900">{it.description}</td>
-                      <td className="px-3 py-2 text-slate-400">—</td>
-                      <td className="px-3 py-2 text-right text-slate-700">{Number(it.qty)}</td>
-                      <td className="px-3 py-2 text-right text-slate-700">{money(Number(it.rate))}</td>
-                      <td className="px-3 py-2 text-right text-slate-400">0.00</td>
-                      <td className="px-3 py-2 text-right text-slate-700">{(effectiveRate * 100).toFixed(0)}%</td>
-                      <td className="px-3 py-2 text-right text-slate-700">{money(lineTax)}</td>
-                      <td className="px-3 py-2 text-right font-medium text-slate-900">{money(lineAmount + lineTax)}</td>
+                    <tr key={it.id} className="border-t border-hairline">
+                      <td className="px-3 py-2 text-ink-muted">{i + 1}</td>
+                      <td className="px-3 py-2 font-medium text-ink">{it.description}</td>
+                      <td className="px-3 py-2 text-ink-muted">—</td>
+                      <td className="px-3 py-2 text-right text-ink-secondary">{Number(it.qty)}</td>
+                      <td className="px-3 py-2 text-right text-ink-secondary">{money(Number(it.rate))}</td>
+                      <td className="px-3 py-2 text-right text-ink-muted">0.00</td>
+                      <td className="px-3 py-2 text-right text-ink-secondary">{(effectiveRate * 100).toFixed(0)}%</td>
+                      <td className="px-3 py-2 text-right text-ink-secondary">{money(lineTax)}</td>
+                      <td className="px-3 py-2 text-right font-medium text-ink">{money(lineAmount + lineTax)}</td>
                     </tr>
                   );
                 })
@@ -451,11 +451,11 @@ export default function InvoicePrintPage() {
         <div className="avoid-break mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
           {/* GST tax summary */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Tax Summary</p>
-            <div className="overflow-hidden rounded-lg border border-slate-200">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">Tax Summary</p>
+            <div className="overflow-hidden rounded-lg border border-hairline">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-slate-50 text-left text-slate-500">
+                  <tr className="bg-section text-left text-ink-muted">
                     <th className="px-2 py-1.5 font-semibold">Taxable Value</th>
                     <th className="px-2 py-1.5 text-right font-semibold">CGST {cgstPct.toFixed(1)}%</th>
                     <th className="px-2 py-1.5 text-right font-semibold">SGST {sgstPct.toFixed(1)}%</th>
@@ -463,13 +463,13 @@ export default function InvoicePrintPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-t border-slate-100 text-slate-700">
+                  <tr className="border-t border-hairline text-ink-secondary">
                     <td className="px-2 py-1.5">{money(subtotal)}</td>
                     <td className="px-2 py-1.5 text-right">{money(cgst)}</td>
                     <td className="px-2 py-1.5 text-right">{money(sgst)}</td>
                     <td className="px-2 py-1.5 text-right">{money(taxAmount)}</td>
                   </tr>
-                  <tr className="border-t border-slate-200 bg-slate-50 font-semibold text-slate-800">
+                  <tr className="border-t border-hairline bg-section font-semibold text-ink">
                     <td className="px-2 py-1.5">Total</td>
                     <td className="px-2 py-1.5 text-right">{money(cgst)}</td>
                     <td className="px-2 py-1.5 text-right">{money(sgst)}</td>
@@ -478,8 +478,8 @@ export default function InvoicePrintPage() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 text-xs text-slate-600">
-              <span className="font-semibold text-slate-700">Amount in words:</span> {amountInWords(total)}
+            <p className="mt-2 text-xs text-ink-secondary">
+              <span className="font-semibold text-ink-secondary">Amount in words:</span> {amountInWords(total)}
             </p>
           </div>
 
@@ -487,30 +487,30 @@ export default function InvoicePrintPage() {
           <div className="flex justify-end">
             <div className="w-full space-y-1.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-500">Subtotal</span>
-                <span className="text-slate-800">{money(subtotal)}</span>
+                <span className="text-ink-muted">Subtotal</span>
+                <span className="text-ink">{money(subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Discount</span>
-                <span className="text-slate-800">{money(0)}</span>
+                <span className="text-ink-muted">Discount</span>
+                <span className="text-ink">{money(0)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">CGST</span>
-                <span className="text-slate-800">{money(cgst)}</span>
+                <span className="text-ink-muted">CGST</span>
+                <span className="text-ink">{money(cgst)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">SGST</span>
-                <span className="text-slate-800">{money(sgst)}</span>
+                <span className="text-ink-muted">SGST</span>
+                <span className="text-ink">{money(sgst)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">IGST</span>
-                <span className="text-slate-800">{money(igst)}</span>
+                <span className="text-ink-muted">IGST</span>
+                <span className="text-ink">{money(igst)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Round Off</span>
-                <span className="text-slate-800">{money(roundOff)}</span>
+                <span className="text-ink-muted">Round Off</span>
+                <span className="text-ink">{money(roundOff)}</span>
               </div>
-              <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-900">
+              <div className="flex justify-between border-t border-hairline pt-2 text-base font-bold text-ink">
                 <span>Grand Total</span>
                 <span className="text-brand">{money(total)}</span>
               </div>
@@ -519,50 +519,50 @@ export default function InvoicePrintPage() {
         </div>
 
         {/* Payment details */}
-        <div className="avoid-break mt-6 grid grid-cols-2 gap-8 border-t border-slate-200 pt-5">
+        <div className="avoid-break mt-6 grid grid-cols-2 gap-8 border-t border-hairline pt-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Payment Details</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Payment Details</p>
             <div className="mt-2 flex items-start justify-between gap-4">
-              <dl className="space-y-1 text-sm text-slate-700">
+              <dl className="space-y-1 text-sm text-ink-secondary">
                 <div className="flex gap-2">
-                  <dt className="w-24 flex-none text-slate-500">Bank Name</dt>
+                  <dt className="w-24 flex-none text-ink-muted">Bank Name</dt>
                   <dd>{PAYMENT_DETAILS.bankName}</dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="w-24 flex-none text-slate-500">Account No</dt>
+                  <dt className="w-24 flex-none text-ink-muted">Account No</dt>
                   <dd>{PAYMENT_DETAILS.accountNumber}</dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="w-24 flex-none text-slate-500">IFSC</dt>
+                  <dt className="w-24 flex-none text-ink-muted">IFSC</dt>
                   <dd>{PAYMENT_DETAILS.ifsc}</dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="w-24 flex-none text-slate-500">UPI</dt>
+                  <dt className="w-24 flex-none text-ink-muted">UPI</dt>
                   <dd>{PAYMENT_DETAILS.upi}</dd>
                 </div>
               </dl>
               {/* Scan-to-pay UPI QR — encodes the payee VPA and the outstanding amount */}
               {PAYMENT_DETAILS.upi && outstanding > 0 && (
                 <div className="flex-none text-center">
-                  <div className="rounded-lg border border-slate-200 bg-white p-1.5">
+                  <div className="rounded-lg border border-hairline bg-surface p-1.5">
                     <QRCodeSVG value={upiPayString} size={76} level="M" />
                   </div>
-                  <p className="mt-1 text-[10px] text-slate-500">Scan to pay</p>
+                  <p className="mt-1 text-[10px] text-ink-muted">Scan to pay</p>
                 </div>
               )}
             </div>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Terms &amp; Conditions</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Terms &amp; Conditions</p>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-ink-muted">
               {TERMS.map((t) => (
                 <li key={t}>{t}</li>
               ))}
             </ul>
             {invoice.notes && (
               <>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Notes</p>
-                <p className="mt-1 text-xs text-slate-500">{invoice.notes}</p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">Notes</p>
+                <p className="mt-1 text-xs text-ink-muted">{invoice.notes}</p>
               </>
             )}
           </div>
@@ -570,13 +570,13 @@ export default function InvoicePrintPage() {
 
         {/* Attachments — shown only when the invoice has linked documents */}
         {attachments.length > 0 && (
-          <div className="avoid-break mt-6 border-t border-slate-200 pt-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Attachments</p>
+          <div className="avoid-break mt-6 border-t border-hairline pt-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Attachments</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {attachments.map((a) => (
                 <span
                   key={a.name}
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700"
+                  className="inline-flex items-center gap-2 rounded-lg border border-hairline bg-section px-3 py-1.5 text-xs text-ink-secondary"
                 >
                   <span className="text-red-500">📎</span>
                   {a.name}
@@ -588,20 +588,20 @@ export default function InvoicePrintPage() {
 
         {/* GST e-invoice block — shown only for e-invoices with an IRN + signed QR */}
         {eInvoice && (
-          <div className="avoid-break mt-6 flex items-start gap-4 border-t border-slate-200 pt-5">
-            <div className="flex-none rounded-lg border border-slate-200 bg-white p-1.5">
+          <div className="avoid-break mt-6 flex items-start gap-4 border-t border-hairline pt-5">
+            <div className="flex-none rounded-lg border border-hairline bg-surface p-1.5">
               <QRCodeSVG value={eInvoice.signedQr} size={96} level="M" />
             </div>
-            <div className="text-xs text-slate-600">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">e-Invoice</p>
+            <div className="text-xs text-ink-secondary">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">e-Invoice</p>
               <p className="mt-1">
-                <span className="text-slate-500">IRN:</span> {eInvoice.irn}
+                <span className="text-ink-muted">IRN:</span> {eInvoice.irn}
               </p>
               <p>
-                <span className="text-slate-500">Ack No:</span> {eInvoice.ackNo}
+                <span className="text-ink-muted">Ack No:</span> {eInvoice.ackNo}
               </p>
               <p>
-                <span className="text-slate-500">Ack Date:</span> {eInvoice.ackDate}
+                <span className="text-ink-muted">Ack Date:</span> {eInvoice.ackDate}
               </p>
             </div>
           </div>
@@ -609,11 +609,11 @@ export default function InvoicePrintPage() {
 
         {/* Footer: signature + thanks */}
         <div className="mt-8 flex items-end justify-between">
-          <p className="text-sm font-medium text-slate-400">Thank you for your business!</p>
+          <p className="text-sm font-medium text-ink-muted">Thank you for your business!</p>
           <div className="text-center">
-            <div className="mb-1 h-12 w-48 border-b border-slate-300" />
-            <p className="text-xs text-slate-500">Authorized Signatory</p>
-            <p className="text-xs font-medium text-slate-700">{company?.name ?? ""}</p>
+            <div className="mb-1 h-12 w-48 border-b border-hairline" />
+            <p className="text-xs text-ink-muted">Authorized Signatory</p>
+            <p className="text-xs font-medium text-ink-secondary">{company?.name ?? ""}</p>
           </div>
         </div>
       </div>
@@ -632,7 +632,7 @@ export default function InvoicePrintPage() {
       )}
 
       {toast && (
-        <div className="print-hide fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
+        <div className="print-hide fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg bg-ink px-4 py-2 text-sm text-white shadow-lg">
           {toast}
         </div>
       )}

@@ -6,7 +6,7 @@ import { supabase, isConfigured } from "@/lib/supabase";
 import type { Customer, Invoice, InvoiceStatus, ReceiptAllocation } from "@/lib/types";
 import { PageHeader } from "@/components/PageHeader";
 import { NotConfigured } from "@/components/NotConfigured";
-import { FormField, inputClass } from "@/components/FormField";
+import { InvoiceForm } from "@/components/InvoiceForm";
 
 type InvoiceRow = Invoice & {
   customers: { name: string; code: string } | null;
@@ -15,11 +15,6 @@ type InvoiceRow = Invoice & {
 const DAY = 24 * 60 * 60 * 1000;
 const today = () => new Date(new Date().toDateString());
 const todayISO = () => new Date().toISOString().slice(0, 10);
-const addDaysISO = (isoDate: string, days: number) => {
-  const d = new Date(isoDate);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-};
 const inr = (n: number) =>
   `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -306,7 +301,23 @@ export default function InvoiceListPage() {
       </div>
 
       {tab === "new" ? (
-        <NewInvoiceForm customers={customers} invoices={invoices} onCreated={handleCreated} onCancel={() => setTab("list")} />
+        <InvoiceForm
+          customers={customers}
+          mode="create"
+          initialValues={{
+            invoiceNo: nextInvoiceNo(invoices),
+            customerId: "",
+            invoiceDate: todayISO(),
+            dueDate: "",
+            taxPercent: "18",
+            notes: "",
+            status: "open",
+            items: [{ description: "", qty: "1", rate: "" }],
+          }}
+          nextInvoiceNo={() => nextInvoiceNo(invoices)}
+          onSaved={handleCreated}
+          onCancel={() => setTab("list")}
+        />
       ) : (
         <div className="animate-fade-in motion-reduce:animate-none">
           {/* KPI row — one neutral card language; color reserved for meaning, not decoration */}
@@ -525,285 +536,6 @@ export default function InvoiceListPage() {
   );
 }
 
-/* ---------------------------------------------------------------------- */
-/* New Invoice tab                                                        */
-/* ---------------------------------------------------------------------- */
-
-type LineItem = { description: string; qty: string; rate: string };
-const EMPTY_ITEM: LineItem = { description: "", qty: "1", rate: "" };
-
-function NewInvoiceForm({
-  customers,
-  invoices,
-  onCreated,
-  onCancel,
-}: {
-  customers: Customer[];
-  invoices: InvoiceRow[];
-  onCreated: () => void;
-  onCancel: () => void;
-}) {
-  const [customerId, setCustomerId] = useState("");
-  const [invoiceDate, setInvoiceDate] = useState(todayISO());
-  const [dueDate, setDueDate] = useState("");
-  const [dueDateTouched, setDueDateTouched] = useState(false);
-  const [items, setItems] = useState<LineItem[]>([{ ...EMPTY_ITEM }]);
-  const [taxPercent, setTaxPercent] = useState("18");
-  const [notes, setNotes] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const customer = customers.find((c) => c.id === customerId) ?? null;
-  const invoiceNo = useMemo(() => nextInvoiceNo(invoices), [invoices]);
-
-  // Due date auto-fills from the customer's credit days, until the user edits it directly.
-  useEffect(() => {
-    if (dueDateTouched || !customer) return;
-    setDueDate(addDaysISO(invoiceDate, customer.credit_days ?? 30));
-  }, [customer, invoiceDate, dueDateTouched]);
-
-  const subtotal = items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
-  const taxAmount = subtotal * ((Number(taxPercent) || 0) / 100);
-  const total = subtotal + taxAmount;
-
-  function updateItem(idx: number, patch: Partial<LineItem>) {
-    setItems((rows) => rows.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
-  }
-  function addItem() {
-    setItems((rows) => [...rows, { ...EMPTY_ITEM }]);
-  }
-  function removeItem(idx: number) {
-    setItems((rows) => (rows.length > 1 ? rows.filter((_, i) => i !== idx) : rows));
-  }
-
-  const validItems = items
-    .map((it) => ({ ...it, qtyNum: Number(it.qty) || 0, rateNum: Number(it.rate) || 0 }))
-    .filter((it) => it.description.trim() && it.qtyNum > 0 && it.rateNum > 0);
-
-  const canSave = Boolean(customerId) && validItems.length > 0 && !saving;
-
-  async function handleSubmit() {
-    if (!supabase || !canSave) return;
-    setSaving(true);
-    setFormError(null);
-
-    const { data: invRow, error: invErr } = await supabase
-      .from("invoices")
-      .insert({
-        invoice_no: invoiceNo,
-        invoice_date: invoiceDate,
-        customer_id: customerId,
-        due_date: dueDate || invoiceDate,
-        subtotal: Math.round(subtotal * 100) / 100,
-        tax_amount: Math.round(taxAmount * 100) / 100,
-        total: Math.round(total * 100) / 100,
-        status: "open",
-        notes: notes.trim() || null,
-      })
-      .select()
-      .single();
-
-    if (invErr || !invRow) {
-      setFormError(invErr?.message ?? "Could not create the invoice.");
-      setSaving(false);
-      return;
-    }
-
-    const { error: itemsErr } = await supabase.from("invoice_items").insert(
-      validItems.map((it) => ({
-        invoice_id: invRow.id,
-        description: it.description.trim(),
-        qty: it.qtyNum,
-        rate: it.rateNum,
-        amount: Math.round(it.qtyNum * it.rateNum * 100) / 100,
-      }))
-    );
-
-    setSaving(false);
-
-    if (itemsErr) {
-      setFormError(itemsErr.message);
-      return;
-    }
-
-    onCreated();
-  }
-
-  return (
-    <div className="max-w-3xl animate-fade-in rounded-xl border border-hairline bg-surface p-6 shadow-card motion-reduce:animate-none">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold tracking-tight text-ink">New Invoice</h3>
-          <p className="mt-1 text-sm text-ink-muted">Next number: <span className="font-medium text-ink-secondary">{invoiceNo}</span></p>
-        </div>
-      </div>
-
-      {formError && (
-        <p className="mt-4 rounded-lg border border-danger-border bg-danger-bg px-3 py-2 text-sm text-danger">{formError}</p>
-      )}
-
-      <div className="mt-5 grid grid-cols-2 gap-4">
-        <FormField label="Customer">
-          <select
-            className={inputClass}
-            value={customerId}
-            onChange={(e) => setCustomerId(e.target.value)}
-          >
-            <option value="">Select a customer…</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.code} — {c.name}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="Invoice Date">
-          <input
-            type="date"
-            className={inputClass}
-            value={invoiceDate}
-            onChange={(e) => setInvoiceDate(e.target.value)}
-          />
-        </FormField>
-        <FormField label={`Due Date${customer ? ` (auto: ${customer.credit_days}d credit)` : ""}`}>
-          <input
-            type="date"
-            className={inputClass}
-            value={dueDate}
-            onChange={(e) => {
-              setDueDateTouched(true);
-              setDueDate(e.target.value);
-            }}
-          />
-        </FormField>
-        <FormField label="Tax %">
-          <input
-            type="number"
-            className={inputClass}
-            value={taxPercent}
-            onChange={(e) => setTaxPercent(e.target.value)}
-          />
-        </FormField>
-      </div>
-
-      <div className="mt-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Line Items</p>
-        <div className="mt-2 overflow-hidden rounded-lg border border-hairline">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-hairline bg-section text-left">
-                <th className="px-3 py-2 font-medium text-ink-secondary">Description</th>
-                <th className="w-20 px-3 py-2 font-medium text-ink-secondary">Qty</th>
-                <th className="w-32 px-3 py-2 font-medium text-ink-secondary">Rate</th>
-                <th className="w-32 px-3 py-2 text-right font-medium text-ink-secondary">Amount</th>
-                <th className="w-10 px-2 py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((it, idx) => {
-                const amount = (Number(it.qty) || 0) * (Number(it.rate) || 0);
-                return (
-                  <tr key={idx} className="border-b border-hairline last:border-0">
-                    <td className="p-2">
-                      <input
-                        className={`${inputClass} w-full`}
-                        placeholder="Description"
-                        value={it.description}
-                        onChange={(e) => updateItem(idx, { description: e.target.value })}
-                      />
-                    </td>
-                    <td className="p-2">
-                      <input
-                        type="number"
-                        min="0"
-                        className={`${inputClass} w-full`}
-                        value={it.qty}
-                        onChange={(e) => updateItem(idx, { qty: e.target.value })}
-                      />
-                    </td>
-                    <td className="p-2">
-                      <input
-                        type="number"
-                        min="0"
-                        className={`${inputClass} w-full`}
-                        value={it.rate}
-                        onChange={(e) => updateItem(idx, { rate: e.target.value })}
-                      />
-                    </td>
-                    <td className="p-2 text-right tabular-nums text-ink-secondary">{inr(amount)}</td>
-                    <td className="p-2 text-center">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(idx)}
-                        disabled={items.length === 1}
-                        aria-label="Remove line item"
-                        className={`text-ink-muted transition-colors duration-150 hover:text-danger disabled:opacity-30 ${FOCUS_RING}`}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <button
-          type="button"
-          onClick={addItem}
-          className={`mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline ${FOCUS_RING}`}
-        >
-          <PlusIcon />
-          Add line
-        </button>
-      </div>
-
-      <FormField label="Notes (optional)">
-        <textarea
-          className={`${inputClass} mt-1.5 min-h-[64px] resize-y`}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-      </FormField>
-
-      <div className="mt-6 flex justify-end">
-        <div className="w-64 space-y-1.5 text-sm">
-          <div className="flex justify-between text-ink-secondary">
-            <span>Subtotal</span>
-            <span className="tabular-nums">{inr(subtotal)}</span>
-          </div>
-          <div className="flex justify-between text-ink-secondary">
-            <span>Tax ({taxPercent || 0}%)</span>
-            <span className="tabular-nums">{inr(taxAmount)}</span>
-          </div>
-          <div className="flex justify-between border-t border-hairline pt-1.5 text-base font-semibold text-ink">
-            <span>Total</span>
-            <span className="tabular-nums">{inr(total)}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className={`rounded-lg px-4 py-2 text-sm font-medium text-ink-secondary transition-colors duration-150 hover:bg-black/[0.04] ${FOCUS_RING}`}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!canSave}
-          className={`rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:scale-[1.02] hover:bg-brand-dark active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 ${FOCUS_RING}`}
-        >
-          {saving ? "Saving…" : "Save Invoice"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function Kpi({
   label,
   value,
@@ -893,13 +625,6 @@ function PlusIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-function TrashIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
