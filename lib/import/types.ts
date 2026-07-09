@@ -70,11 +70,11 @@ export type RowStatus = "valid" | "warning" | "error";
 
 /**
  * Mutually exclusive, exhaustive bucket for a row — every row falls into exactly one,
- * so summing the five categories always equals the total row count. Drives both the
- * Step 4 summary cards and the filter they control, so counts can never drift from
- * what's actually shown in the table.
+ * so summing the four categories always equals the total row count. Drives both the
+ * Step 4 quick-filter cards and the filter they control, so counts can never drift
+ * from what's actually shown in the table.
  */
-export type RowCategory = "excluded" | "duplicate" | "missing" | "invalid" | "valid";
+export type RowCategory = "excluded" | "duplicate" | "error" | "valid";
 
 export interface RowIssue {
   /** Target field key, or "_row" for a whole-row problem. */

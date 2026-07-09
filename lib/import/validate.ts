@@ -137,14 +137,15 @@ function validateFieldShapes(
 
 /**
  * Buckets a row into exactly one category (priority order: excluded > duplicate >
- * missing-required > other-invalid > valid), so the Step 4 summary cards, their
- * click-to-filter behavior, and the visible row count always agree with each other.
+ * error), so the Step 4 summary cards, their click-to-filter behavior, and the
+ * visible row count always agree with each other. Warning-only rows (e.g. a
+ * slightly-off email) still count as "valid" — they aren't blocking and will still
+ * import — matching the classic Errors / Duplicates / Valid split.
  */
 export function categorizeRow(row: ImportRow, uniqueKey: string): RowCategory {
   if (row.excluded) return "excluded";
   if (row.issues.some((i) => i.field === uniqueKey)) return "duplicate";
-  if (row.issues.some((i) => i.level === "error" && /is required/i.test(i.message))) return "missing";
-  if (row.issues.length > 0) return "invalid";
+  if (row.status === "error") return "error";
   return "valid";
 }
 

@@ -167,7 +167,13 @@ export function ImportWizard() {
       setResult(merged);
 
       const imported = runResult.created + runResult.updated;
-      const status: AuditStatus = runResult.failed === 0 ? "success" : imported === 0 ? "failed" : "partial";
+      const status: AuditStatus = runResult.cancelled
+        ? "cancelled"
+        : runResult.failed === 0
+        ? "success"
+        : imported === 0
+        ? "failed"
+        : "partial";
       const failedSample = runResult.rows
         .filter((r) => r.action === "failed")
         .slice(0, 20)
@@ -188,6 +194,9 @@ export function ImportWizard() {
         performedBy: currentUser?.name ?? "Unknown user",
         status,
         failedSample,
+        // This run's own created/updated row IDs — lets History's Delete remove
+        // exactly the data this entry represents (see lib/import/templates.ts).
+        undo: runResult.undo,
       });
       goTo(7);
     } catch (err) {
@@ -228,12 +237,12 @@ export function ImportWizard() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs">
         {currentUser ? (
           <span className="text-ink-muted">
-            Importing as <span className="font-semibold text-ink-secondary">{currentUser.name}</span> — recorded automatically in Import History
+            👤 Importing as <span className="font-semibold text-ink-secondary">{currentUser.name}</span> — recorded automatically in Import History
           </span>
         ) : (
-          <span className="rounded-lg bg-warning-bg px-3 py-1.5 text-warning">
+          <span className="rounded-lg border border-warning-border bg-warning-bg px-3 py-1.5 text-warning">
             You're not signed in — this import will be logged as "Unknown user".{" "}
-            <Link href="/signin" className="font-medium underline hover:text-warning">
+            <Link href="/signin" className="font-medium underline hover:opacity-80">
               Sign in
             </Link>{" "}
             to have it attributed to you.
@@ -243,7 +252,7 @@ export function ImportWizard() {
 
       <Stepper current={step} furthest={furthest} onJump={goTo} />
 
-      {runError && <p className="mb-4 rounded-lg bg-danger-bg px-4 py-3 text-sm text-danger">{runError}</p>}
+      {runError && <p className="mb-4 rounded-lg border border-danger-border bg-danger-bg px-4 py-3 text-sm text-danger">⚠ {runError}</p>}
 
       {step === 1 && <StepChooseType entity={entity} mode={mode} onChange={handleChooseType} onNext={() => goTo(2)} />}
 

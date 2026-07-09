@@ -1,4 +1,4 @@
-import type { FieldMapping, ImportEntity, MappingTemplate } from "./types";
+import type { FieldMapping, ImportEntity, MappingTemplate, UndoRecord } from "./types";
 
 /*
   Mapping templates and the audit trail live in localStorage, not Supabase — CLAUDE.md
@@ -55,7 +55,7 @@ export function deleteMappingTemplate(id: string) {
   }
 }
 
-export type AuditStatus = "success" | "failed" | "partial";
+export type AuditStatus = "success" | "failed" | "partial" | "cancelled";
 
 export interface AuditEntry {
   id: string;
@@ -73,6 +73,13 @@ export interface AuditEntry {
   status: AuditStatus;
   /** First few failed rows, kept small so the log doesn't bloat localStorage. */
   failedSample: { key: string; error: string }[];
+  /**
+   * The exact created/updated row IDs this run touched — lets Import History's
+   * Delete actually remove the imported data (not just the log entry). See
+   * lib/import/runner.ts: undoImportRun() deletes createdIds and restores
+   * updatedPrev. Safe to re-run against already-removed rows (no-op, not an error).
+   */
+  undo: UndoRecord[];
 }
 
 export function appendAuditEntry(entry: AuditEntry) {

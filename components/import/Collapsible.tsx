@@ -19,7 +19,7 @@ export function Collapsible({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-hairline bg-surface">
+    <div className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-card">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -37,7 +37,7 @@ export function Collapsible({
           ▾
         </span>
       </button>
-      {open && <div className="border-t border-hairline/50 p-5">{children}</div>}
+      {open && <div className="border-t border-hairline p-5">{children}</div>}
     </div>
   );
 }

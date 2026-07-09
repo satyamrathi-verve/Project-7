@@ -13,10 +13,10 @@ export function StepProgress({ progress, onCancel }: { progress: ImportProgressS
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-hairline bg-surface p-8 text-center">
+      <div className="rounded-xl border border-hairline bg-surface p-8 text-center shadow-card">
         <p className="text-sm font-semibold text-brand">{stageLabel}</p>
         <p className="mt-2 text-4xl font-bold text-ink">{pct}%</p>
-        <div className="mx-auto mt-4 h-2.5 w-full max-w-md overflow-hidden rounded-full bg-sidebar">
+        <div className="mx-auto mt-4 h-2.5 w-full max-w-md overflow-hidden rounded-full bg-section">
           <div className="h-full bg-brand transition-[width] duration-300" style={{ width: `${pct}%` }} />
         </div>
         <p className="mt-3 text-sm text-ink-muted">
@@ -31,7 +31,7 @@ export function StepProgress({ progress, onCancel }: { progress: ImportProgressS
         <Stat label="Speed" value={`${progress?.rowsPerSecond ?? 0} rows/s`} />
       </div>
 
-      <div className="rounded-xl border border-hairline bg-surface p-4 text-center text-sm text-ink-muted">
+      <div className="rounded-xl border border-hairline bg-surface p-4 text-center text-sm text-ink-muted shadow-card">
         {progress?.etaSeconds != null ? `Estimated time remaining: ${formatEta(progress.etaSeconds)}` : "Calculating time remaining…"}
       </div>
 
@@ -51,7 +51,7 @@ export function StepProgress({ progress, onCancel }: { progress: ImportProgressS
 
 function Stat({ label, value, tone = "text-ink" }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-xl border border-hairline bg-surface p-4 text-center">
+    <div className="rounded-xl border border-hairline bg-surface p-4 text-center shadow-card">
       <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{label}</p>
       <p className={`mt-1 text-xl font-bold ${tone}`}>{value}</p>
     </div>
