@@ -22,6 +22,12 @@ export interface FieldDef {
   help?: string;
 }
 
+/** A business-level requirement shown on Step 1 — doesn't always map 1:1 to a FieldDef. */
+export interface MandatoryHighlight {
+  label: string;
+  note: string;
+}
+
 export interface EntityConfig {
   entity: ImportEntity;
   label: string;
@@ -31,6 +37,13 @@ export interface EntityConfig {
   uniqueKey: string;
   fields: FieldDef[];
   sampleRows: Record<string, string>[];
+  /** Plain-language "what you need before you start" list shown on Step 1. */
+  mandatoryHighlights: MandatoryHighlight[];
+  /**
+   * Rules that span more than one field (e.g. "email OR phone"), which a single
+   * FieldDef.required can't express. Runs after per-field validation.
+   */
+  crossFieldValidate?: (values: Record<string, string>) => { field: string; level: "error" | "warning"; message: string }[];
 }
 
 export interface ParsedCsv {
@@ -54,6 +67,14 @@ export type FieldMapping = Record<string, string | null>;
 export type MappingConfidence = Record<string, number>;
 
 export type RowStatus = "valid" | "warning" | "error";
+
+/**
+ * Mutually exclusive, exhaustive bucket for a row — every row falls into exactly one,
+ * so summing the five categories always equals the total row count. Drives both the
+ * Step 4 summary cards and the filter they control, so counts can never drift from
+ * what's actually shown in the table.
+ */
+export type RowCategory = "excluded" | "duplicate" | "missing" | "invalid" | "valid";
 
 export interface RowIssue {
   /** Target field key, or "_row" for a whole-row problem. */

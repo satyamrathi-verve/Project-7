@@ -7,6 +7,7 @@ import type {
   ImportMode,
   ImportRow,
   ParsedCsv,
+  RowCategory,
   RowIssue,
 } from "./types";
 
@@ -32,9 +33,13 @@ export function parseDateFlexible(raw: string, format: ImportConfig["dateFormat"
     return `${year}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   };
 
+  // ISO (YYYY-MM-DD) is never ambiguous, so it's always accepted regardless of which
+  // format the user picked — the format setting only disambiguates slash-separated
+  // dates. Previously an explicit DMY/MDY choice skipped the ISO check entirely,
+  // which broke re-imports of the app's own exports (Postgres/Supabase dates are ISO).
   if (format === "YMD") return tryYMD();
-  if (format === "DMY") return trySlash(true);
-  if (format === "MDY") return trySlash(false);
+  if (format === "DMY") return tryYMD() ?? trySlash(true);
+  if (format === "MDY") return tryYMD() ?? trySlash(false);
 
   // auto: ISO first (unambiguous), then DMY (most common outside the US), then MDY.
   return tryYMD() ?? trySlash(true) ?? trySlash(false) ?? null;
@@ -109,19 +114,38 @@ function validateFieldShapes(
     }
   }
 
-  if (entity.entity === "invoices") {
-    const subtotal = Number(values.subtotal || 0);
+  if (entity.entity === "invoices" && values.subtotal !== "") {
+    // Subtotal is optional (computed from Invoice Amount − Tax when blank) — only
+    // worth cross-checking when the file actually supplied one.
+    const subtotal = Number(values.subtotal);
     const tax = Number(values.tax_amount || 0);
     const total = values.total ? Number(values.total) : null;
     if (total != null && !Number.isNaN(total) && !Number.isNaN(subtotal) && !Number.isNaN(tax)) {
       const expected = subtotal + tax;
       if (Math.abs(expected - total) > 0.5) {
-        issues.push({ field: "total", level: "warning", message: `Total (${total}) doesn't match subtotal + tax (${expected.toFixed(2)}).` });
+        issues.push({ field: "total", level: "warning", message: `Invoice Amount (${total}) doesn't match Subtotal + Tax (${expected.toFixed(2)}).` });
       }
     }
   }
 
+  if (entity.crossFieldValidate) {
+    issues.push(...entity.crossFieldValidate(values));
+  }
+
   return issues;
+}
+
+/**
+ * Buckets a row into exactly one category (priority order: excluded > duplicate >
+ * missing-required > other-invalid > valid), so the Step 4 summary cards, their
+ * click-to-filter behavior, and the visible row count always agree with each other.
+ */
+export function categorizeRow(row: ImportRow, uniqueKey: string): RowCategory {
+  if (row.excluded) return "excluded";
+  if (row.issues.some((i) => i.field === uniqueKey)) return "duplicate";
+  if (row.issues.some((i) => i.level === "error" && /is required/i.test(i.message))) return "missing";
+  if (row.issues.length > 0) return "invalid";
+  return "valid";
 }
 
 function finalizeRow(
