@@ -229,7 +229,7 @@ export default function CustomerStatementPage() {
       });
 
       // Amount Due box
-      const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+      const finalY = (doc as typeof doc & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
       doc.setFillColor(30, 58, 95);
       doc.roundedRect(pageWidth - 75, finalY, 60, 20, 2, 2, "F");
       doc.setTextColor(255, 255, 255);
