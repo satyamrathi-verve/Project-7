@@ -16,7 +16,7 @@ export function QuickActionsFab() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 print:hidden">
+    <div className="fixed bottom-6 right-6 z-40 hidden flex-col items-end gap-3 md:flex print:hidden">
       {open && <button aria-hidden tabIndex={-1} className="fixed inset-0 cursor-default" onClick={() => setOpen(false)} />}
 
       <div role="menu" className="flex flex-col items-end gap-2.5">

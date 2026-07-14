@@ -156,6 +156,11 @@ body::after {
   transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Safe area padding for mobile devices with notches/home indicators */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Print styles for clean PDF export */
 @media print {
   @page {

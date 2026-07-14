@@ -87,7 +87,7 @@ export function StatCard({
           </span>
         )}
       </div>
-      <p className="mt-4 text-[30px] font-bold leading-none tracking-tight text-ink tabular-nums">{displayValue}</p>
+      <p className="mt-4 text-[22px] font-bold leading-none tracking-tight text-ink tabular-nums md:text-[30px]">{displayValue}</p>
       <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ink-muted">{label}</p>
       {insight && <p className="mt-1 text-[12px] text-ink-muted/80">{insight}</p>}
       {sparkline && (

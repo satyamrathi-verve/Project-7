@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Nav } from './Nav';
+import { MobileNav } from './MobileNav';
 import { getCurrentUser } from '@/lib/auth';
 
 /*
@@ -45,10 +46,17 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen print:block">
-      <div className="print:hidden">
+      {/* Desktop sidebar - hidden on mobile */}
+      <div className="hidden md:block print:hidden">
         <Nav />
       </div>
-      <main className="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible">{children}</main>
+      {/* Mobile bottom nav - hidden on desktop */}
+      <div className="md:hidden print:hidden">
+        <MobileNav />
+      </div>
+      <main className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8 print:p-0 print:overflow-visible">
+        {children}
+      </main>
     </div>
   );
 }
